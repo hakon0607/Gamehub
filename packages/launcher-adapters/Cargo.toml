@@ -1,0 +1,16 @@
+[package]
+name = "gamehub-adapters"
+version = "0.1.0"
+edition = "2021"
+description = "One module per PC game launcher: find it, list its installed games, and say how to start them."
+
+[dependencies]
+gamehub-detect = { path = "../game-detection" }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+thiserror = "2"
+time = { version = "0.3", features = ["formatting", "parsing", "macros"] }
+walkdir = "2"
+
+[dev-dependencies]
+tempfile = "3"
