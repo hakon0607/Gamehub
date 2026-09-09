@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.next/
+target/
+.env
+.env.local
+*.log
+.DS_Store
+# Screenshots from scripts/preview.mjs
+scripts/preview-out/
