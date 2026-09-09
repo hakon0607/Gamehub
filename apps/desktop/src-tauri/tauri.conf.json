@@ -1,0 +1,90 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "GameHub",
+  "mainBinaryName": "GameHub",
+  "version": "1.0.0",
+  "identifier": "com.gamehub.desktop",
+  "build": {
+    "beforeDevCommand": "pnpm dev",
+    "devUrl": "http://localhost:1420",
+    "beforeBuildCommand": "pnpm build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "GameHub",
+        "width": 1280,
+        "height": 820,
+        "minWidth": 960,
+        "minHeight": 620,
+        "resizable": true,
+        "decorations": true,
+        "theme": "Dark"
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self'; img-src 'self' asset: http://asset.localhost data:; media-src 'self' asset: http://asset.localhost blob:; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'self' ipc: http://ipc.localhost asset: http://asset.localhost",
+      "assetProtocol": {
+        "enable": true,
+        "scope": [
+          "$APPDATA/**"
+        ]
+      }
+    },
+    "trayIcon": {
+      "id": "main",
+      "iconPath": "icons/icon.png",
+      "iconAsTemplate": false,
+      "tooltip": "GameHub"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": [
+      "nsis"
+    ],
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.ico"
+    ],
+    "publisher": "GameHub",
+    "copyright": "Copyright © 2026 GameHub",
+    "category": "Game",
+    "shortDescription": "Every PC game you own, in one place.",
+    "longDescription": "GameHub collects your games from Steam, Epic, Xbox, EA, Ubisoft Connect, Battle.net, GOG and Riot into one library, notices new installs by itself, tracks your playtime and streaks, and launches each game through its own launcher.",
+    "homepage": "https://github.com/hakon0607/gamehub",
+    "windows": {
+      "webviewInstallMode": {
+        "type": "downloadBootstrapper"
+      },
+      "nsis": {
+        "installMode": "both",
+        "installerIcon": "icons/icon.ico",
+        "startMenuFolder": "GameHub",
+        "languages": [
+          "English"
+        ],
+        "displayLanguageSelector": false,
+        "compression": "lzma"
+      }
+    },
+    "createUpdaterArtifacts": true,
+    "resources": [
+      "resources/*"
+    ]
+  },
+  "plugins": {
+    "updater": {
+      "endpoints": [
+        "https://github.com/hakon0607/gamehub/releases/latest/download/latest.json"
+      ],
+      "pubkey": "SET_VIA_TAURI_UPDATER_PUBKEY_SECRET",
+      "windows": {
+        "installMode": "passive"
+      }
+    }
+  }
+}
