@@ -121,10 +121,18 @@ impl SystemAudio {
             .ok_or_else(|| "Ingen lydenhet er valgt som standard utgang i Windows.".to_string())?;
         let device_name = device.name().unwrap_or_else(|_| "Standard lydenhet".into());
 
-        // On WASAPI an output device opened for input *is* loopback capture.
-        let supported = device
-            .default_input_config()
-            .map_err(|e| format!("Lydenheten «{device_name}» kan ikke tas opp fra: {e}"))?;
+        // On WASAPI an output device opened for input *is* loopback capture —
+        // but cpal answers `default_input_config()` on an output device with
+        // "stream type not supported", which is exactly what shipped in 1.0.0
+        // and left every clip silent. The format to capture in is the
+        // device's *output* mix format; the loopback flag is added by cpal
+        // when the stream is built, because the endpoint renders.
+        let supported = match device.default_input_config() {
+            Ok(config) => config,
+            Err(_) => device
+                .default_output_config()
+                .map_err(|e| format!("Lydenheten «{device_name}» kan ikke tas opp fra: {e}"))?,
+        };
         let format = PcmFormat {
             sample_rate: supported.sample_rate().0,
             channels: supported.channels(),
