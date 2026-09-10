@@ -139,7 +139,7 @@ const answers = {
   hidden_count: () => 2,
   get_save_folder: () => 'C:\\Users\\Håkon\\AppData\\Roaming\\EldenRing',
   'plugin:app|version': () => '1.0.0',
-  'plugin:event|listen': () => 1,
+  'plugin:event|listen': (a) => { window.__LISTENERS__ = window.__LISTENERS__ || {}; (window.__LISTENERS__[a.event] ||= []).push(a.handler); return 1; },
   'plugin:event|unlisten': () => null,
   'plugin:updater|check': () => null,
 };
@@ -236,6 +236,23 @@ for (const [code, home, settingsLabel] of [['de', 'Start', 'Einstellungen'], ['e
   await shoot(`21-settings-${code}`);
   void home;
 }
+// The popup over the game, as the hidden app shows it: its own tiny window.
+const popup = await browser.newPage({ viewport: { width: 400, height: 104 }, deviceScaleFactor: 2 });
+await popup.addInitScript(mock);
+await popup.addInitScript(`window.__ANSWERS__ = {}; window.__ANSWERS_SRC__ = ${JSON.stringify(Object.fromEntries(Object.entries(answers).map(([k, v]) => [k, v.toString()])))};`);
+await popup.addInitScript(`for (const [k, src] of Object.entries(window.__ANSWERS_SRC__)) window.__ANSWERS__[k] = eval('(' + src + ')');`);
+await popup.goto(`http://localhost:${port}/?overlay=1`);
+await popup.waitForSelector('.overlay-stack');
+// Stand in for the game underneath the transparent window.
+await popup.addStyleTag({ content: 'html.overlay-window { background: linear-gradient(135deg, #1a2a1a, #0b1a2b) !important; }' });
+await popup.evaluate(() => {
+  for (const id of window.__LISTENERS__['overlay-toast'] ?? []) {
+    window['_cb' + id]({ payload: { title: '@toast_clip_saved', body: 'Fortnite · 30 s', kind: 'clip', language: 'nb', theme: 'nattbla', seconds: 60 } });
+  }
+});
+await popup.waitForTimeout(500);
+await popup.screenshot({ path: join(out, '30-popup.png') });
+console.log('  30-popup.png');
 await browser.close();
 server.close();
 console.log(`\nscreenshots in ${out}`);
