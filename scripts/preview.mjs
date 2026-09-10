@@ -138,6 +138,18 @@ const answers = {
   list_displays: () => ['\\\\.\\DISPLAY1 (2560×1440)', '\\\\.\\DISPLAY2 (1920×1080)'],
   hidden_count: () => 2,
   get_save_folder: () => 'C:\\Users\\Håkon\\AppData\\Roaming\\EldenRing',
+  wallpaper_status: () => ({
+    supported: true, lockSupported: true,
+    desktop: { path: frame(120), fileName: 'nordlys-4k.jpg', width: 3840, height: 2160, bytes: 4_200_000 },
+    desktopActive: true,
+    lock: null,
+    monitors: [
+      { id: '\\\\?\\DISPLAY#1', index: 0, width: 2560, height: 1440, current: 'C:\\Users\\Håkon\\AppData\\Roaming\\GameHub\\wallpapers\\desktop-2026.jpg', chosen: null },
+      { id: '\\\\?\\DISPLAY#2', index: 1, width: 1920, height: 1080, current: 'C:\\Users\\Håkon\\AppData\\Roaming\\GameHub\\wallpapers\\desktop-2026.jpg', chosen: null },
+    ],
+    folder: 'C:\\Users\\Håkon\\AppData\\Roaming\\GameHub\\wallpapers',
+  }),
+  set_wallpaper: () => null,
   'plugin:app|version': () => '1.0.0',
   'plugin:event|listen': (a) => { window.__LISTENERS__ = window.__LISTENERS__ || {}; (window.__LISTENERS__[a.event] ||= []).push(a.handler); return 1; },
   'plugin:event|unlisten': () => null,
@@ -210,6 +222,9 @@ await nav('Ytelse');
 await shoot('09-performance');
 await nav('Innstillinger');
 await shoot('10-settings-general');
+await page.click('.settings-tab:has-text("Utseende")');
+await page.evaluate(() => document.querySelector('.wp')?.scrollIntoView());
+await shoot('10b-settings-wallpapers');
 await page.click('.settings-tab:has-text("Replay")');
 await shoot('11-settings-replay');
 await page.fill('.settings-search input', 'lyd');
