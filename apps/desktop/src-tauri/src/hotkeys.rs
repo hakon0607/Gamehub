@@ -48,10 +48,10 @@ fn handle(app: &AppHandle, action: Action) {
                 let state = app.state::<Arc<AppState>>().inner().clone();
                 match crate::commands::capture_screenshot(&app, &state) {
                     Ok(shot) => {
-                        let _ = app.emit("toast", (crate::msg::plain("toast_shot_saved"), shot.game_name));
+                        crate::overlay::notify(&app, crate::msg::plain("toast_shot_saved"), shot.game_name);
                     }
                     Err(error) => {
-                        let _ = app.emit("toast", (crate::msg::plain("toast_shot_failed"), error));
+                        crate::overlay::notify(&app, crate::msg::plain("toast_shot_failed"), error);
                     }
                 }
             });
@@ -62,10 +62,10 @@ fn handle(app: &AppHandle, action: Action) {
                 let state = app.state::<Arc<AppState>>().inner().clone();
                 match crate::commands::save_replay_now(&app, &state, None) {
                     Ok(clip) => {
-                        let _ = app.emit("toast", (crate::msg::plain("toast_clip_saved"), clip.game_name));
+                        crate::overlay::notify(&app, crate::msg::plain("toast_clip_saved"), clip.game_name);
                     }
                     Err(error) => {
-                        let _ = app.emit("toast", (crate::msg::plain("toast_clip_failed"), error));
+                        crate::overlay::notify(&app, crate::msg::plain("toast_clip_failed"), error);
                     }
                 }
             });
@@ -76,16 +76,14 @@ fn handle(app: &AppHandle, action: Action) {
                 let state = app.state::<Arc<AppState>>().inner().clone();
                 match crate::commands::toggle_replay(&app, &state) {
                     Ok(on) => {
-                        let _ = app.emit(
-                            "toast",
-                            (
-                                crate::msg::plain(if on { "toast_replay_on" } else { "toast_replay_off" }),
-                                crate::msg::plain(if on { "toast_replay_on_body" } else { "toast_replay_off_body" }),
-                            ),
+                        crate::overlay::notify(
+                            &app,
+                            crate::msg::plain(if on { "toast_replay_on" } else { "toast_replay_off" }),
+                            crate::msg::plain(if on { "toast_replay_on_body" } else { "toast_replay_off_body" }),
                         );
                     }
                     Err(error) => {
-                        let _ = app.emit("toast", (crate::msg::plain("toast_replay_toggle_failed"), error));
+                        crate::overlay::notify(&app, crate::msg::plain("toast_replay_toggle_failed"), error);
                     }
                 }
             });
@@ -96,16 +94,14 @@ fn handle(app: &AppHandle, action: Action) {
                 let state = app.state::<Arc<AppState>>().inner().clone();
                 match crate::commands::toggle_freeze(&app, &state) {
                     Ok((frozen, name)) => {
-                        let _ = app.emit(
-                            "toast",
-                            (
-                                crate::msg::plain(if frozen { "toast_frozen" } else { "toast_resumed" }),
-                                if frozen { crate::msg::code("toast_frozen_body", &[&name]) } else { name },
-                            ),
+                        crate::overlay::notify(
+                            &app,
+                            crate::msg::plain(if frozen { "toast_frozen" } else { "toast_resumed" }),
+                            if frozen { crate::msg::code("toast_frozen_body", &[&name]) } else { name },
                         );
                     }
                     Err(error) => {
-                        let _ = app.emit("toast", (crate::msg::plain("toast_freeze_failed"), error));
+                        crate::overlay::notify(&app, crate::msg::plain("toast_freeze_failed"), error);
                     }
                 }
             });

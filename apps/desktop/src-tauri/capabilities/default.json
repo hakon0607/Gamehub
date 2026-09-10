@@ -4,7 +4,8 @@
   "description": "The smallest set of permissions GameHub needs. Note what is absent: no shell plugin, no filesystem plugin, and no HTTP plugin. Every filesystem read and every process start happens in Rust, behind a command that validates its arguments first. The clipboard permissions cover reading what was copied into the local history and writing an item back when the user clicks Copy again; nothing here can send anything anywhere.",
   "windows": [
     "main",
-    "quicktools"
+    "quicktools",
+    "notify"
   ],
   "permissions": [
     "core:default",

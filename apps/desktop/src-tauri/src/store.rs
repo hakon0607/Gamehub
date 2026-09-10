@@ -95,6 +95,10 @@ pub struct Settings {
     /// False until the language screen has been answered once — so existing
     /// installs see it once after updating, and new ones on first start.
     pub language_chosen: bool,
+    /// The little popup over the game when a shortcut does something while
+    /// GameHub is hidden, and whether it plings.
+    pub overlay_popup: bool,
+    pub overlay_sound: bool,
     pub theme: String,
     pub onboarded: bool,
     /// The update version the user chose "Later" for. Cleared automatically by
@@ -126,6 +130,8 @@ impl Default for Settings {
             cloud: CloudSettings::default(),
             language: "en".into(),
             language_chosen: false,
+            overlay_popup: true,
+            overlay_sound: true,
             theme: "nattbla".into(),
             onboarded: false,
             dismissed_update_version: None,

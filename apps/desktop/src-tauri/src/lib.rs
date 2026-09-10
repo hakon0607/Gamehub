@@ -18,6 +18,7 @@ mod autostart;
 mod commands;
 mod launch;
 mod msg;
+mod overlay;
 mod tray;
 mod perf;
 mod process;
@@ -76,6 +77,7 @@ pub fn run() {
             crate::assets::grant(app.handle(), &state);
 
             tray::build(app.handle(), &state.settings().language)?;
+            overlay::create(app.handle());
 
             // The updater plugin, so the front end's `check()` and
             // `downloadAndInstall()` have something to talk to. Registered
