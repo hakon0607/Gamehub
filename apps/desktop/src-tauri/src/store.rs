@@ -99,6 +99,8 @@ pub struct Settings {
     /// GameHub is hidden, and whether it plings.
     pub overlay_popup: bool,
     pub overlay_sound: bool,
+    /// Desktop background and lock screen picture GameHub set for Windows.
+    pub wallpapers: crate::wallpaper::WallpaperSettings,
     pub theme: String,
     pub onboarded: bool,
     /// The update version the user chose "Later" for. Cleared automatically by
@@ -132,6 +134,7 @@ impl Default for Settings {
             language_chosen: false,
             overlay_popup: true,
             overlay_sound: true,
+            wallpapers: crate::wallpaper::WallpaperSettings::default(),
             theme: "nattbla".into(),
             onboarded: false,
             dismissed_update_version: None,
@@ -187,6 +190,11 @@ impl Paths {
     /// both, and means the background survives a backup and restore too.
     pub fn backgrounds(&self) -> PathBuf {
         self.data_dir.join("backgrounds")
+    }
+
+    /// Where chosen wallpapers are copied to, for the same reasons.
+    pub fn wallpapers(&self) -> PathBuf {
+        self.data_dir.join("wallpapers")
     }
 
     /// Takes a snapshot if this is the first launch after an update.

@@ -223,7 +223,7 @@ pub const MAX_COVER_BYTES: usize = 8 * 1024 * 1024;
 
 /// The image formats a cover may come from, by their file signature rather
 /// than by extension — a `.png` that is really something else is refused.
-fn sniff_image(bytes: &[u8]) -> Option<&'static str> {
+pub(crate) fn sniff_image(bytes: &[u8]) -> Option<&'static str> {
     if bytes.starts_with(&[0x89, b'P', b'N', b'G', 0x0d, 0x0a, 0x1a, 0x0a]) {
         Some("image/png")
     } else if bytes.starts_with(&[0xff, 0xd8, 0xff]) {

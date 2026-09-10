@@ -1563,3 +1563,62 @@ pub fn set_save_folder(state: State<'_, Arc<AppState>>, game_id: String, folder:
 
 #[allow(dead_code)]
 fn _freeze_library_type_is_used(_: &FreezeLibrary) {}
+
+// ------------------------------------------------------------------ wallpapers
+
+#[tauri::command]
+pub async fn wallpaper_status(state: State<'_, Arc<AppState>>) -> Reply<crate::wallpaper::WallpaperStatus> {
+    let state = state.inner().clone();
+    // Talks to COM, so off the UI thread like everything else that can wait.
+    blocking(move || Ok(crate::wallpaper::status(&state))).await
+}
+
+/// Sets a picture as the desktop background (every monitor, or one by its
+/// id) or the lock screen picture, and returns the new state.
+#[tauri::command]
+pub async fn set_wallpaper(
+    state: State<'_, Arc<AppState>>,
+    target: String,
+    path: String,
+    monitor: Option<String>,
+) -> Reply<crate::wallpaper::WallpaperStatus> {
+    let state = state.inner().clone();
+    blocking(move || {
+        let target = crate::wallpaper::Target::parse(&target)?;
+        crate::wallpaper::apply(&state, target, Path::new(&path), monitor.as_deref())?;
+        Ok(crate::wallpaper::status(&state))
+    })
+    .await
+}
+
+/// Forgets GameHub's choice without touching what Windows shows.
+#[tauri::command]
+pub async fn forget_wallpaper(
+    state: State<'_, Arc<AppState>>,
+    target: String,
+    monitor: Option<String>,
+) -> Reply<crate::wallpaper::WallpaperStatus> {
+    let state = state.inner().clone();
+    blocking(move || {
+        let target = crate::wallpaper::Target::parse(&target)?;
+        crate::wallpaper::forget(&state, target, monitor.as_deref())?;
+        Ok(crate::wallpaper::status(&state))
+    })
+    .await
+}
+
+/// Puts Windows' own default picture back.
+#[tauri::command]
+pub async fn default_wallpaper(
+    state: State<'_, Arc<AppState>>,
+    target: String,
+    monitor: Option<String>,
+) -> Reply<crate::wallpaper::WallpaperStatus> {
+    let state = state.inner().clone();
+    blocking(move || {
+        let target = crate::wallpaper::Target::parse(&target)?;
+        crate::wallpaper::restore_default(&state, target, monitor.as_deref())?;
+        Ok(crate::wallpaper::status(&state))
+    })
+    .await
+}

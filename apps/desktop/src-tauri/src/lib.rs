@@ -20,6 +20,7 @@ mod launch;
 mod msg;
 mod overlay;
 mod tray;
+mod wallpaper;
 mod perf;
 mod process;
 mod state;
@@ -211,6 +212,10 @@ pub fn run() {
             commands::set_save_folder,
             commands::get_save_folder,
             commands::set_freeze_note,
+            commands::wallpaper_status,
+            commands::set_wallpaper,
+            commands::forget_wallpaper,
+            commands::default_wallpaper,
         ])
         .run(tauri::generate_context!())
         .expect("GameHub failed to start");
