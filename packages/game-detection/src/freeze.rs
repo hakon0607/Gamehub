@@ -105,12 +105,12 @@ pub fn reconcile(library: &mut FreezeLibrary, alive: impl Fn(u32) -> bool) -> us
 /// inside `clip_root` — never anywhere else.
 pub fn remove(library: &mut FreezeLibrary, clip_root: &Path, id: &str) -> Result<(), String> {
     let Some(position) = library.points.iter().position(|p| p.id == id) else {
-        return Err("That freeze point is not in the list.".into());
+        return Err("@freeze_gone".into());
     };
     let folder = PathBuf::from(&library.points[position].folder);
     if folder.is_dir() {
         if !crate::safepath::is_within(clip_root, &folder) {
-            return Err("That folder is outside the clip folder, so it was left alone.".into());
+            return Err("@freeze_outside".into());
         }
         let _ = std::fs::remove_dir_all(&folder);
     }

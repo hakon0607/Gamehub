@@ -87,25 +87,17 @@ pub fn validate_executable(path: &Path, allowed_roots: &[PathBuf]) -> Result<Pat
         .map(|e| e.to_string_lossy().to_lowercase())
         .unwrap_or_default();
     if !ALLOWED_EXECUTABLE_EXTENSIONS.contains(&extension.as_str()) {
-        return Err(DetectError::Rejected(format!(
-            "{} is not an executable GameHub will start",
-            normalised.display()
-        )));
+        // Rejections are message codes the interface translates (`@key|param`).
+        return Err(DetectError::Rejected(format!("@launch_not_executable|{}", normalised.display())));
     }
 
     if !allowed_roots.is_empty() && !allowed_roots.iter().any(|root| is_within(root, &normalised)) {
-        return Err(DetectError::Rejected(format!(
-            "{} is outside every folder GameHub knows about",
-            normalised.display()
-        )));
+        return Err(DetectError::Rejected(format!("@launch_outside_roots|{}", normalised.display())));
     }
 
     let meta = std::fs::metadata(&normalised).map_err(crate::error::io(normalised.clone()))?;
     if !meta.is_file() {
-        return Err(DetectError::Rejected(format!(
-            "{} is not a file",
-            normalised.display()
-        )));
+        return Err(DetectError::Rejected(format!("@not_a_file|{}", normalised.display())));
     }
 
     Ok(normalised)
@@ -122,17 +114,13 @@ pub fn validate_uri(uri: &str) -> Result<String> {
         .to_lowercase();
 
     if !ALLOWED_URI_SCHEMES.contains(&scheme.as_str()) {
-        return Err(DetectError::Rejected(format!(
-            "\"{scheme}\" is not a launcher protocol GameHub recognises"
-        )));
+        return Err(DetectError::Rejected(format!("@launch_bad_protocol|{scheme}")));
     }
     if uri.chars().any(|c| c.is_control() || c == '"' || c == '\'') {
-        return Err(DetectError::Rejected(
-            "launcher URI contains characters that are not allowed".into(),
-        ));
+        return Err(DetectError::Rejected("@launch_bad_uri".into()));
     }
     if uri.len() > 2048 {
-        return Err(DetectError::Rejected("launcher URI is implausibly long".into()));
+        return Err(DetectError::Rejected("@launch_uri_too_long".into()));
     }
     Ok(uri.to_string())
 }

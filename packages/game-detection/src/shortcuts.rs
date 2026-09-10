@@ -238,10 +238,9 @@ pub enum RebindError {
 impl std::fmt::Display for RebindError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            RebindError::Conflict { label, .. } => write!(
-                f,
-                "That combination is already used by \"{label}\". Pick another, or clear that one first."
-            ),
+            // Message codes the interface translates (`@key|param`); the
+            // conflicting action is named by its own translated label.
+            RebindError::Conflict { action, .. } => write!(f, "@shortcut_conflict|@sc.{action}"),
             RebindError::Invalid(why) => write!(f, "{why}"),
         }
     }
@@ -258,7 +257,7 @@ pub fn validate_binding(binding: &str) -> Result<String, RebindError> {
 
     let parts: Vec<&str> = trimmed.split('+').map(str::trim).filter(|p| !p.is_empty()).collect();
     if parts.is_empty() {
-        return Err(RebindError::Invalid("That is not a key combination.".into()));
+        return Err(RebindError::Invalid("@shortcut_not_combo".into()));
     }
 
     let modifiers = ["ctrl", "control", "alt", "shift", "super", "cmd", "command", "meta"];
@@ -267,9 +266,7 @@ pub fn validate_binding(binding: &str) -> Result<String, RebindError> {
         .partition(|p| modifiers.contains(&p.to_lowercase().as_str()));
 
     if keys.len() != 1 {
-        return Err(RebindError::Invalid(
-            "A shortcut needs exactly one key besides the modifiers.".into(),
-        ));
+        return Err(RebindError::Invalid("@shortcut_one_key".into()));
     }
 
     let key = keys[0].to_lowercase();
@@ -278,9 +275,7 @@ pub fn validate_binding(binding: &str) -> Result<String, RebindError> {
 
     // A bare letter would fire every time the user typed it.
     if mods.is_empty() && !is_function_key {
-        return Err(RebindError::Invalid(
-            "Add Ctrl, Alt or Shift — a single letter would fire while you were typing.".into(),
-        ));
+        return Err(RebindError::Invalid("@shortcut_needs_modifier".into()));
     }
 
     Ok(trimmed.to_string())

@@ -127,11 +127,11 @@ pub fn set_favorite(library: &mut ScreenshotLibrary, id: &str, favorite: bool) -
 /// Removes the entry and the file. Only ever inside the screenshot root.
 pub fn remove(library: &mut ScreenshotLibrary, root: &Path, id: &str) -> Result<(), String> {
     let Some(position) = library.items.iter().position(|s| s.id == id) else {
-        return Err("That screenshot is not in the library.".into());
+        return Err("@shot_gone".into());
     };
     let path = PathBuf::from(&library.items[position].path);
     if !crate::safepath::is_within(root, &path) {
-        return Err("That file is outside the screenshot folder, so it was not deleted.".into());
+        return Err("@shot_outside".into());
     }
     let _ = std::fs::remove_file(&path);
     library.items.remove(position);
