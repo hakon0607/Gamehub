@@ -32,6 +32,7 @@ export interface Settings {
   languageChosen: boolean;
   overlayPopup: boolean;
   overlaySound: boolean;
+  wallpapers: { desktop: string; lock: string; monitors: Record<string, string> };
   theme: string;
   onboarded: boolean;
   dismissedUpdateVersion: string | null;
@@ -228,6 +229,36 @@ export interface FreezeStatus {
   folder: string;
 }
 
+export type WallpaperTarget = 'desktop' | 'lock';
+
+export interface WallpaperPicture {
+  path: string;
+  fileName: string;
+  width: number;
+  height: number;
+  bytes: number;
+}
+
+export interface WallpaperMonitor {
+  id: string;
+  index: number;
+  width: number;
+  height: number;
+  /** What Windows shows on this monitor right now. */
+  current: string;
+  chosen: WallpaperPicture | null;
+}
+
+export interface WallpaperStatus {
+  supported: boolean;
+  lockSupported: boolean;
+  desktop: WallpaperPicture | null;
+  desktopActive: boolean;
+  lock: WallpaperPicture | null;
+  monitors: WallpaperMonitor[];
+  folder: string;
+}
+
 export interface SaveCandidate {
   path: string;
   location: string;
@@ -373,6 +404,13 @@ export const api = {
 
   // Freeze points.
   freezeStatus: () => invoke<FreezeStatus>('freeze_status'),
+  wallpaperStatus: () => invoke<WallpaperStatus>('wallpaper_status'),
+  setWallpaper: (target: WallpaperTarget, path: string, monitor?: string) =>
+    invoke<WallpaperStatus>('set_wallpaper', { target, path, monitor: monitor ?? null }),
+  forgetWallpaper: (target: WallpaperTarget, monitor?: string) =>
+    invoke<WallpaperStatus>('forget_wallpaper', { target, monitor: monitor ?? null }),
+  defaultWallpaper: (target: WallpaperTarget, monitor?: string) =>
+    invoke<WallpaperStatus>('default_wallpaper', { target, monitor: monitor ?? null }),
   getFreezes: () => invoke<FreezePoint[]>('get_freezes'),
   freezeNow: (gameId?: string) => invoke<FreezePoint>('freeze_now', { gameId: gameId ?? null }),
   resumeFreeze: (id: string) => invoke<FreezePoint>('resume_freeze', { id }),

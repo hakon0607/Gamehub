@@ -11,6 +11,7 @@ import { categories, searchSettings, type SettingsCategory } from '../settingsIn
 import { Confirm, SettingGroup, SettingRow, Slider, Toggle } from '../ui';
 import { formatSeconds } from '../format';
 import { LANGUAGES, t, tr, type Key } from '../i18n';
+import { Wallpapers } from '../components/Wallpapers';
 
 const THEMES: { id: string; key: Key; swatch: string[] }[] = [
   { id: 'nattbla', key: 'settings.theme_nattbla', swatch: ['#05070d', '#0b1120', '#4f8cff'] },
@@ -239,6 +240,11 @@ export function SettingsView({
                   {draft.backgroundImage && <button className="btn sm btn-ghost" onClick={() => void save({ ...draft, backgroundImage: '' })}>{t('common.remove')}</button>}
                 </>
               ), 2)}
+            </SettingGroup>
+            <SettingGroup title={t('wp.title')}>
+              <div style={{ padding: 16 }} data-setting="wallpaper-desktop" className={highlight?.startsWith('wallpaper') ? 'highlight' : ''}>
+                <Wallpapers onToast={onToast} />
+              </div>
             </SettingGroup>
           </>
         )}

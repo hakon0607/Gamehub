@@ -78,6 +78,8 @@ const ENTRIES: { id: string; category: SettingsCategory; keywords: string }[] = 
   { id: 'accent', category: 'appearance', keywords: 'accent colour color' },
   { id: 'density', category: 'appearance', keywords: 'compact spacing density' },
   { id: 'background', category: 'appearance', keywords: 'background wallpaper image' },
+  { id: 'wallpaper-desktop', category: 'appearance', keywords: 'wallpaper desktop background windows bakgrunnsbilde skrivebord monitor screen' },
+  { id: 'wallpaper-lock', category: 'appearance', keywords: 'wallpaper lock screen låseskjerm windows picture' },
   { id: 'replay-enabled', category: 'replay', keywords: 'replay record buffer on off' },
   { id: 'replay-buffer', category: 'replay', keywords: 'buffer length minutes seconds remember 10 min' },
   { id: 'replay-save', category: 'replay', keywords: 'f8 save clip length seconds' },
