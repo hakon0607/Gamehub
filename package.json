@@ -1,7 +1,7 @@
 {
   "name": "gamehub",
   "private": true,
-  "version": "1.0.2",
+  "version": "1.1.0",
   "packageManager": "pnpm@9.12.0",
   "scripts": {
     "dev": "pnpm --filter @gamehub/desktop dev",
@@ -14,7 +14,7 @@
     "installer": "pnpm --filter @gamehub/desktop tauri build && node scripts/rename-installer.mjs",
     "latest-json": "node scripts/make-latest-json.mjs",
     "fetch-ffmpeg": "node scripts/fetch-ffmpeg.mjs",
-    "test:release": "node scripts/release-guard.test.mjs && node scripts/apply-updater-pubkey.test.mjs && node scripts/shortcut-match.test.mjs && node scripts/csp.test.mjs && node scripts/contrast.test.mjs",
+    "test:release": "node scripts/i18n.test.mjs && node scripts/release-guard.test.mjs && node scripts/apply-updater-pubkey.test.mjs && node scripts/shortcut-match.test.mjs && node scripts/csp.test.mjs && node scripts/contrast.test.mjs",
     "test:layout": "node scripts/layout.test.mjs"
   },
   "devDependencies": {
