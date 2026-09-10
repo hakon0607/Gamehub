@@ -93,7 +93,7 @@ pub fn launch_game(app: AppHandle, state: State<'_, Arc<AppState>>, game_id: Str
             .iter()
             .find(|g| g.id == game_id)
             .cloned()
-            .ok_or_else(|| "That game is no longer in your library.".to_string())?
+            .ok_or_else(|| crate::msg::plain("game_gone"))?
     };
 
     crate::launch::launch(&game).map_err(|e| e.to_string())?;
@@ -127,7 +127,7 @@ pub fn set_hidden(state: State<'_, Arc<AppState>>, game_id: String, hidden: bool
 pub fn rename_game(state: State<'_, Arc<AppState>>, game_id: String, name: String) -> Reply<()> {
     let name = name.trim().to_string();
     if name.is_empty() || name.len() > 200 {
-        return Err("That name will not work — between 1 and 200 characters, please.".into());
+        return Err(crate::msg::plain("bad_name"));
     }
     update_game(&state, &game_id, |g| {
         g.name = name.clone();
@@ -160,7 +160,7 @@ fn update_game(state: &State<'_, Arc<AppState>>, game_id: &str, f: impl Fn(&mut 
             f(game);
             Ok(())
         }
-        None => Err("That game is no longer in your library.".into()),
+        None => Err(crate::msg::plain("game_gone")),
     }
 }
 
@@ -173,13 +173,13 @@ pub fn open_game_folder(state: State<'_, Arc<AppState>>, game_id: String) -> Rep
         .library
         .iter()
         .find(|g| g.id == game_id)
-        .ok_or_else(|| "That game is no longer in your library.".to_string())?;
+        .ok_or_else(|| crate::msg::plain("game_gone"))?;
     let dir = game
         .install_dir
         .clone()
-        .ok_or_else(|| "GameHub does not know where this game is installed.".to_string())?;
+        .ok_or_else(|| crate::msg::plain("no_install_dir"))?;
     if !Path::new(&dir).is_dir() {
-        return Err("That folder is not there any more.".into());
+        return Err(crate::msg::plain("folder_gone"));
     }
     Ok(dir)
 }
@@ -202,7 +202,7 @@ pub fn get_settings(state: State<'_, Arc<AppState>>) -> Settings {
 async fn blocking<T: Send + 'static>(work: impl FnOnce() -> Reply<T> + Send + 'static) -> Reply<T> {
     tauri::async_runtime::spawn_blocking(work)
         .await
-        .map_err(|e| format!("GameHub mistet tråden som gjorde jobben: {e}"))?
+        .map_err(|e| crate::msg::code("thread_lost", &[&e.to_string()]))?
 }
 
 #[tauri::command]
@@ -230,9 +230,12 @@ pub fn save_settings_sync(app: &AppHandle, state: &Arc<AppState>, settings: Sett
     let start_with_windows = settings.start_with_windows;
     settings.replay.buffer_seconds = settings.replay.buffer();
     settings.replay.save_seconds = settings.replay.save_seconds.clamp(5, settings.replay.buffer());
-    let replay_changed = {
+    let (replay_changed, language_changed) = {
         let inner = state.inner.lock();
-        serde_json::to_string(&inner.settings.replay).ok() != serde_json::to_string(&settings.replay).ok()
+        (
+            serde_json::to_string(&inner.settings.replay).ok() != serde_json::to_string(&settings.replay).ok(),
+            inner.settings.language != settings.language,
+        )
     };
     {
         let mut inner = state.inner.lock();
@@ -254,8 +257,14 @@ pub fn save_settings_sync(app: &AppHandle, state: &Arc<AppState>, settings: Sett
     // restarting ffmpeg. Done here so the user never has to know that.
     if replay_changed {
         if let Err(error) = apply_replay(app, state) {
-            let _ = app.emit("toast", ("Replay startet ikke", error));
+            let _ = app.emit("toast", (crate::msg::plain("toast_replay_not_started"), error));
         }
+    }
+
+    // The tray menu is the one bit of interface drawn from Rust; it follows
+    // the language like everything else.
+    if language_changed {
+        crate::tray::relabel(app, &settings.language);
     }
 
     let _ = app.emit("settings-updated", &settings);
@@ -272,7 +281,7 @@ fn adopt_background(state: &Arc<AppState>, chosen: &str) -> Reply<String> {
         return Ok(chosen.to_string());
     }
     if !source.is_file() {
-        return Err(format!("{chosen} is not a file"));
+        return Err(crate::msg::code("not_a_file", &[&chosen.to_string()]));
     }
 
     std::fs::create_dir_all(&folder).map_err(|e| e.to_string())?;
@@ -280,7 +289,7 @@ fn adopt_background(state: &Arc<AppState>, chosen: &str) -> Reply<String> {
         .extension()
         .map(|e| e.to_string_lossy().to_lowercase())
         .filter(|e| ["png", "jpg", "jpeg", "webp", "gif", "bmp"].contains(&e.as_str()))
-        .ok_or_else(|| "that is not an image GameHub can show".to_string())?;
+        .ok_or_else(|| crate::msg::plain("not_an_image"))?;
 
     let name = format!("background-{}.{extension}", gamehub_detect::backup::slug(&gamehub_detect::now_iso8601()));
     let target = gamehub_detect::safepath::join_within(&folder, &name).map_err(|e| e.to_string())?;
@@ -314,7 +323,7 @@ pub fn add_manual_game(
     let folder = path
         .parent()
         .map(Path::to_path_buf)
-        .ok_or_else(|| "That file has no folder.".to_string())?;
+        .ok_or_else(|| crate::msg::plain("no_folder"))?;
     gamehub_detect::safepath::validate_executable(&path, &[folder.clone()]).map_err(|e| e.to_string())?;
 
     let title = name
@@ -364,7 +373,7 @@ pub fn remove_game(app: AppHandle, state: State<'_, Arc<AppState>>, game_id: Str
     let outcome = {
         let mut inner = state.inner.lock();
         let Some(position) = inner.library.iter().position(|g| g.id == game_id) else {
-            return Err("That game is no longer in your library.".into());
+            return Err(crate::msg::plain("game_gone"));
         };
         let added_by_hand = inner.library[position].tags.iter().any(|t| t == "added by hand");
         if added_by_hand {
@@ -407,7 +416,7 @@ pub fn hidden_count(state: State<'_, Arc<AppState>>) -> usize {
 #[tauri::command]
 pub fn add_game_folder(state: State<'_, Arc<AppState>>, folder: String) -> Reply<Settings> {
     if !Path::new(&folder).is_dir() {
-        return Err("That folder does not exist.".into());
+        return Err(crate::msg::plain("folder_missing"));
     }
     {
         let mut inner = state.inner.lock();
@@ -481,7 +490,7 @@ pub fn set_custom_cover(
             .library
             .iter_mut()
             .find(|g| g.id == game_id)
-            .ok_or_else(|| "That game is no longer in your library.".to_string())?;
+            .ok_or_else(|| crate::msg::plain("game_gone"))?;
         let mut metadata = game.metadata.clone().unwrap_or_default();
         metadata.cover_path = Some(path_string.clone());
         metadata.provider = Some("manual".into());
@@ -760,7 +769,7 @@ pub fn get_shortcuts(state: State<'_, Arc<AppState>>) -> Vec<gamehub_detect::sho
 #[tauri::command]
 pub fn set_shortcut(app: AppHandle, state: State<'_, Arc<AppState>>, action: String, binding: String) -> Reply<String> {
     let action = gamehub_detect::shortcuts::Action::from_id(&action)
-        .ok_or_else(|| "No such shortcut.".to_string())?;
+        .ok_or_else(|| crate::msg::plain("no_shortcut"))?;
     let result = {
         let mut inner = state.inner.lock();
         gamehub_detect::shortcuts::rebind(&mut inner.bindings, action, &binding).map_err(|e| e.to_string())
@@ -773,7 +782,7 @@ pub fn set_shortcut(app: AppHandle, state: State<'_, Arc<AppState>>, action: Str
 #[tauri::command]
 pub fn reset_shortcut(app: AppHandle, state: State<'_, Arc<AppState>>, action: String) -> Reply<()> {
     let action = gamehub_detect::shortcuts::Action::from_id(&action)
-        .ok_or_else(|| "No such shortcut.".to_string())?;
+        .ok_or_else(|| crate::msg::plain("no_shortcut"))?;
     {
         let mut inner = state.inner.lock();
         gamehub_detect::shortcuts::reset(&mut inner.bindings, action);
@@ -909,11 +918,7 @@ pub fn apply_replay(app: &AppHandle, state: &Arc<AppState>) -> Reply<()> {
     }
 
     let Some(ffmpeg) = ffmpeg_for(app) else {
-        return Err(
-            "Replay needs ffmpeg, and GameHub could not find it. Run `pnpm fetch-ffmpeg` before building, \
-             or install ffmpeg so it is on your PATH."
-                .into(),
-        );
+        return Err(crate::msg::plain("replay_no_ffmpeg"));
     };
 
     recorder.start(&ffmpeg, &settings.replay)?;
@@ -936,10 +941,10 @@ pub fn save_replay_now(
 ) -> Reply<crate::replay::Clip> {
     let settings = state.settings();
     if !settings.replay.enabled {
-        return Err("Replay is switched off, so there is nothing buffered to save.".into());
+        return Err(crate::msg::plain("replay_off"));
     }
     let Some(ffmpeg) = ffmpeg_for(app) else {
-        return Err("Replay needs ffmpeg, and GameHub could not find it.".into());
+        return Err(crate::msg::plain("replay_no_ffmpeg"));
     };
 
     // The hotkey saves the length the user chose — 30 seconds unless they said
@@ -972,9 +977,9 @@ pub fn save_replay_now(
             let why = recorder.last_complaint();
             let last = why.lines().last().unwrap_or("").trim().to_string();
             return Err(if last.is_empty() {
-                "Opptaket kjører ikke. Slå replay av og på igjen.".to_string()
+                crate::msg::plain("replay_not_running")
             } else {
-                format!("Opptaket stoppet: {last}")
+                crate::msg::code("replay_stopped", &[&last])
             });
         }
         recorder.audio.system_audio || recorder.audio.microphone
@@ -1023,11 +1028,11 @@ pub fn delete_replay_clip(state: State<'_, Arc<AppState>>, id: String) -> Reply<
     {
         let mut inner = state.inner.lock();
         let Some(position) = inner.clips.clips.iter().position(|c| c.id == id) else {
-            return Err("That clip is not in the library.".into());
+            return Err(crate::msg::plain("clip_gone"));
         };
         let path = PathBuf::from(&inner.clips.clips[position].path);
         if !gamehub_detect::safepath::is_within(&root, &path) {
-            return Err("That file is outside the clip folder, so it was not deleted.".into());
+            return Err(crate::msg::plain("clip_outside"));
         }
         let _ = std::fs::remove_file(&path);
         inner.clips.clips.remove(position);
@@ -1085,7 +1090,7 @@ pub fn backup_now(app: AppHandle, state: State<'_, Arc<AppState>>) -> Reply<Opti
         &version,
         &now,
     )
-    .map_err(|e| format!("The backup could not be written: {e}"))?;
+    .map_err(|e| crate::msg::code("backup_write", &[&e.to_string()]))?;
 
     gamehub_detect::backup::prune(&state.paths.data_dir, 10);
     Ok(snapshot)
@@ -1109,7 +1114,7 @@ pub fn restore_backup(app: AppHandle, state: State<'_, Arc<AppState>>, id: Strin
         &version,
         &now,
     )
-    .map_err(|e| format!("That backup could not be restored: {e}"))?;
+    .map_err(|e| crate::msg::code("backup_restore", &[&e.to_string()]))?;
 
     // Read the restored files back into memory.
     let paths = &state.paths;
@@ -1261,7 +1266,7 @@ pub async fn freeze_now(app: AppHandle, state: State<'_, Arc<AppState>>, game_id
 
 pub fn freeze_game(app: &AppHandle, state: &Arc<AppState>, game_id: Option<String>) -> Reply<FreezePoint> {
     if !crate::freeze::supported() {
-        return Err("Frysing av spill er ikke tilgjengelig på denne maskinen.".into());
+        return Err(crate::msg::plain("freeze_unsupported"));
     }
 
     // Which game: the one asked for, else whatever is being played.
@@ -1275,26 +1280,26 @@ pub fn freeze_game(app: &AppHandle, state: &Arc<AppState>, game_id: Option<Strin
                 .first()
                 .map(|open| open.game_id.clone())
                 .or_else(|| inner.running.first().cloned())
-                .ok_or_else(|| "Ingen spill kjører akkurat nå.".to_string())?,
+                .ok_or_else(|| crate::msg::plain("no_game_running"))?,
         };
         let game = inner
             .library
             .iter()
             .find(|g| g.id == id)
-            .ok_or_else(|| "Det spillet er ikke i biblioteket lenger.".to_string())?;
+            .ok_or_else(|| crate::msg::plain("game_gone"))?;
         if freeze::active_for(&inner.freezes, &id).is_some() {
-            return Err(format!("{} er allerede frosset.", game.name));
+            return Err(crate::msg::code("already_frozen", &[&game.name]));
         }
         let dir = game
             .install_dir
             .clone()
-            .ok_or_else(|| "GameHub vet ikke hvor dette spillet er installert, så prosessene kan ikke finnes.".to_string())?;
+            .ok_or_else(|| crate::msg::plain("no_install_dir_freeze"))?;
         (id, game.name.clone(), PathBuf::from(dir))
     };
 
     let pids = crate::freeze::pids_for(&install_dir);
     if pids.is_empty() {
-        return Err(format!("{game_name} kjører ikke akkurat nå."));
+        return Err(crate::msg::code("game_not_running", &[&game_name]));
     }
 
     // 1. Stop it. This is the part that must happen first and fast.
@@ -1303,7 +1308,7 @@ pub fn freeze_game(app: &AppHandle, state: &Arc<AppState>, game_id: Option<Strin
     let frozen_at = gamehub_detect::now_iso8601();
     let root = clip_root(state);
     let folder = freeze::folder_for(&root, &game_name, &frozen_at);
-    std::fs::create_dir_all(&folder).map_err(|e| format!("Mappen for frysepunktet kunne ikke lages: {e}"))?;
+    std::fs::create_dir_all(&folder).map_err(|e| crate::msg::code("freeze_folder", &[&e.to_string()]))?;
 
     let mut point = FreezePoint {
         id: format!("{frozen_at}-freeze"),
@@ -1346,7 +1351,7 @@ pub fn freeze_game(app: &AppHandle, state: &Arc<AppState>, game_id: Option<Strin
                 point.save_dir = Some(save_dir);
                 freeze::record_copy(&mut point, &copy, &report);
             }
-            Err(error) => point.note = format!("Lagringsmappen kunne ikke kopieres: {error}"),
+            Err(error) => point.note = crate::msg::code("save_copy_failed", &[&error.to_string()]),
         }
     }
 
@@ -1376,9 +1381,9 @@ pub fn resume_point(app: &AppHandle, state: &Arc<AppState>, id: &str) -> Reply<F
             .points
             .iter()
             .find(|p| p.id == id)
-            .ok_or_else(|| "Det frysepunktet finnes ikke.".to_string())?;
+            .ok_or_else(|| crate::msg::plain("freeze_gone"))?;
         if point.state != FreezeState::Frozen {
-            return Err("Spillet er ikke frosset nå.".into());
+            return Err(crate::msg::plain("not_frozen"));
         }
         point.pids.clone()
     };
@@ -1393,7 +1398,7 @@ pub fn resume_point(app: &AppHandle, state: &Arc<AppState>, id: &str) -> Reply<F
     state.persist_freezes();
     let _ = app.emit("freeze-changed", &point);
     if resumed == 0 {
-        return Err("Spillet kjørte ikke lenger, så det var ingenting å gjenoppta. Lagringskopien er beholdt.".into());
+        return Err(crate::msg::plain("resume_nothing"));
     }
     Ok(point)
 }
@@ -1440,11 +1445,11 @@ fn restore_freeze_save_sync(state: &Arc<AppState>, id: &str) -> Reply<String> {
             .points
             .iter()
             .find(|p| p.id == id)
-            .ok_or_else(|| "Det frysepunktet finnes ikke.".to_string())?;
+            .ok_or_else(|| crate::msg::plain("freeze_gone"))?;
         let copy = point
             .save_copy
             .clone()
-            .ok_or_else(|| "Dette frysepunktet har ingen lagringskopi.".to_string())?;
+            .ok_or_else(|| crate::msg::plain("no_save_copy"))?;
         // The game's *current* save folder wins over the one recorded at the
         // time, in case it was corrected since.
         let save_dir = point
@@ -1452,7 +1457,7 @@ fn restore_freeze_save_sync(state: &Arc<AppState>, id: &str) -> Reply<String> {
             .as_ref()
             .and_then(|gid| inner.freezes.save_dirs.get(gid).cloned())
             .or_else(|| point.save_dir.clone())
-            .ok_or_else(|| "Ingen lagringsmappe er valgt for dette spillet.".to_string())?;
+            .ok_or_else(|| crate::msg::plain("no_save_dir"))?;
         (copy, save_dir, point.folder.clone(), point.game_id.clone())
     };
 
@@ -1460,7 +1465,7 @@ fn restore_freeze_save_sync(state: &Arc<AppState>, id: &str) -> Reply<String> {
     // its next save, or worse, reads half of it.
     if let Some(gid) = &game_id {
         if state.inner.lock().running.contains(gid) {
-            return Err("Avslutt spillet først — ellers overskriver det den gjenopprettede lagringen.".into());
+            return Err(crate::msg::plain("close_game_first"));
         }
     }
 
@@ -1468,14 +1473,13 @@ fn restore_freeze_save_sync(state: &Arc<AppState>, id: &str) -> Reply<String> {
     let aside = Path::new(&folder).join(format!("before-restore-{stamp}"));
     if Path::new(&save_dir).is_dir() {
         gamehub_detect::saves::copy_tree(Path::new(&save_dir), &aside)
-            .map_err(|e| format!("Dagens lagring kunne ikke kopieres til side: {e}"))?;
+            .map_err(|e| crate::msg::code("aside_failed", &[&e.to_string()]))?;
     }
     let report = gamehub_detect::saves::copy_tree(Path::new(&copy), Path::new(&save_dir))
-        .map_err(|e| format!("Lagringen kunne ikke gjenopprettes: {e}"))?;
-    Ok(format!(
-        "{} filer lagt tilbake i {save_dir}. Det som lå der før ligger i {}.",
-        report.files,
-        aside.display()
+        .map_err(|e| crate::msg::code("restore_failed", &[&e.to_string()]))?;
+    Ok(crate::msg::code(
+        "restore_done",
+        &[&report.files.to_string(), &save_dir, &aside.display().to_string()],
     ))
 }
 
@@ -1486,7 +1490,7 @@ pub fn delete_freeze(app: AppHandle, state: State<'_, Arc<AppState>>, id: String
         let mut inner = state.inner.lock();
         if let Some(point) = inner.freezes.points.iter().find(|p| p.id == id) {
             if point.state == FreezeState::Frozen {
-                return Err("Gjenoppta spillet før du sletter frysepunktet.".into());
+                return Err(crate::msg::plain("resume_before_delete"));
             }
         }
         freeze::remove(&mut inner.freezes, &root, &id)?;
@@ -1505,7 +1509,7 @@ pub fn set_freeze_note(state: State<'_, Arc<AppState>>, id: String, note: String
             .points
             .iter_mut()
             .find(|p| p.id == id)
-            .ok_or_else(|| "Det frysepunktet finnes ikke.".to_string())?;
+            .ok_or_else(|| crate::msg::plain("freeze_gone"))?;
         point.note = note.trim().chars().take(400).collect();
     }
     state.persist_freezes();
@@ -1526,7 +1530,7 @@ fn find_save_folders_sync(state: &Arc<AppState>, game_id: &str) -> Reply<Vec<gam
             .library
             .iter()
             .find(|g| g.id == game_id)
-            .ok_or_else(|| "Det spillet er ikke i biblioteket lenger.".to_string())?;
+            .ok_or_else(|| crate::msg::plain("game_gone"))?;
         (game.name.clone(), game.install_dir.clone().map(PathBuf::from))
     };
     Ok(gamehub_detect::saves::find_candidates(&state.env.folders, &name, install_dir.as_deref()))
@@ -1543,7 +1547,7 @@ pub fn get_save_folder(state: State<'_, Arc<AppState>>, game_id: String) -> Opti
 pub fn set_save_folder(state: State<'_, Arc<AppState>>, game_id: String, folder: String) -> Reply<()> {
     let folder = folder.trim().to_string();
     if !folder.is_empty() && !Path::new(&folder).is_dir() {
-        return Err("Den mappen finnes ikke.".into());
+        return Err(crate::msg::plain("folder_missing"));
     }
     {
         let mut inner = state.inner.lock();

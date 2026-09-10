@@ -90,7 +90,11 @@ pub struct Settings {
     pub metadata: MetadataKeys,
     pub ai: AiSettings,
     pub cloud: CloudSettings,
+    /// Interface language code (`en`, `nb`, ...). English until chosen.
     pub language: String,
+    /// False until the language screen has been answered once — so existing
+    /// installs see it once after updating, and new ones on first start.
+    pub language_chosen: bool,
     pub theme: String,
     pub onboarded: bool,
     /// The update version the user chose "Later" for. Cleared automatically by
@@ -120,7 +124,8 @@ impl Default for Settings {
             metadata: MetadataKeys::default(),
             ai: AiSettings::default(),
             cloud: CloudSettings::default(),
-            language: "nb".into(),
+            language: "en".into(),
+            language_chosen: false,
             theme: "nattbla".into(),
             onboarded: false,
             dismissed_update_version: None,

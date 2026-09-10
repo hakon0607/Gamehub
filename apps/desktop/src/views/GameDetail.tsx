@@ -6,20 +6,15 @@ import { convertFileSrc } from '@tauri-apps/api/core';
 import { revealItemInDir } from '@tauri-apps/plugin-opener';
 import { api, type FreezePoint, type SaveCandidate } from '../api';
 import { CoverCropper } from '../components/CoverCropper';
-import { formatBytes, formatDateTime, formatRelativeDay } from '../format';
+import { formatBytes, formatDateTime, formatPlaytime, formatRelativeDay } from '../format';
+import { t, tr } from '../i18n';
 import { Confirm, Modal, SettingGroup, SettingRow } from '../ui';
-
-function formatPlaytime(seconds: number | null): string {
-  if (!seconds) return '—';
-  const hours = seconds / 3600;
-  return hours >= 1 ? `${hours.toFixed(1)} timer` : `${Math.round(seconds / 60)} minutter`;
-}
 
 function launchDescription(game: Game): string {
   const launch = game.launch;
-  if (!launch) return 'GameHub vet ikke hvordan dette spillet startes.';
-  if (launch.kind === 'uri') return `Gjennom ${SOURCE_LABELS[game.source]} (${launch.uri})`;
-  if (launch.kind === 'uwp') return 'Som Windows Store-app';
+  if (!launch) return t('game.launch_unknown');
+  if (launch.kind === 'uri') return t('game.launch_via', { source: SOURCE_LABELS[game.source], uri: launch.uri });
+  if (launch.kind === 'uwp') return t('game.launch_uwp');
   return launch.path;
 }
 
@@ -38,6 +33,7 @@ export function GameDetail({
   onResume,
   onGoFreezes,
   onToast,
+  freezeKey,
 }: {
   game: Game;
   running: boolean;
@@ -53,6 +49,7 @@ export function GameDetail({
   onResume: (id: string) => void;
   onGoFreezes: () => void;
   onToast: (title: string, body?: string) => void;
+  freezeKey: string;
 }) {
   const [renaming, setRenaming] = useState(false);
   const [draft, setDraft] = useState(game.name);
@@ -77,12 +74,12 @@ export function GameDetail({
   }, [game]);
 
   const pickCover = async () => {
-    const picked = await open({ multiple: false, filters: [{ name: 'Bilde', extensions: ['png', 'jpg', 'jpeg', 'webp', 'gif', 'bmp'] }] });
+    const picked = await open({ multiple: false, filters: [{ name: t('game.pick_image'), extensions: ['png', 'jpg', 'jpeg', 'webp', 'gif', 'bmp'] }] });
     if (typeof picked !== 'string') return;
     try {
       setCropping(await api.readImageForCrop(picked));
     } catch (error) {
-      onToast('Bildet kunne ikke åpnes', String(error));
+      onToast(t('game.image_failed'), tr(error));
     }
   };
 
@@ -94,7 +91,7 @@ export function GameDetail({
       await api.renameGame(game.id, name);
       onRenamed(name);
     } catch (error) {
-      onToast('Navnet ble ikke endret', String(error));
+      onToast(t('game.rename_failed'), tr(error));
     }
   };
 
@@ -110,9 +107,9 @@ export function GameDetail({
       await api.setSaveFolder(game.id, folder);
       setSaveDir(folder || null);
       setCandidates(null);
-      onToast(folder ? 'Lagringsmappe valgt' : 'Lagringsmappe fjernet', folder || undefined);
+      onToast(folder ? t('game.save_dir_set') : t('game.save_dir_cleared'), folder || undefined);
     } catch (error) {
-      onToast('Mappen ble ikke lagret', String(error));
+      onToast(t('game.save_dir_failed'), tr(error));
     }
   };
 
@@ -121,7 +118,7 @@ export function GameDetail({
     try {
       setCandidates(await api.findSaveFolders(game.id));
     } catch (error) {
-      onToast('Søket mislyktes', String(error));
+      onToast(t('game.search_failed'), tr(error));
     } finally {
       setSearching(false);
     }
@@ -134,7 +131,7 @@ export function GameDetail({
   return (
     <div className="view">
       <button className="back" onClick={onBack}>
-        ← Tilbake
+        {t('game.back')}
       </button>
       <div className="detail">
         <div>
@@ -142,12 +139,12 @@ export function GameDetail({
             {cover ? (
               <img src={convertFileSrc(cover)} alt="" />
             ) : (
-              <div style={{ height: '100%', display: 'grid', placeItems: 'center', color: 'var(--ink-faint)' }}>Ingen cover</div>
+              <div style={{ height: '100%', display: 'grid', placeItems: 'center', color: 'var(--ink-faint)' }}>{t('game.no_cover')}</div>
             )}
           </div>
           <div className="row" style={{ marginTop: 10 }}>
             <button className="btn sm" style={{ flex: 1 }} onClick={() => void pickCover()}>
-              Bytt cover…
+              {t('game.change_cover')}
             </button>
             {game.metadata?.provider === 'manual' && (
               <button
@@ -157,13 +154,13 @@ export function GameDetail({
                   onCoverChanged();
                 }}
               >
-                Fjern mitt
+                {t('game.remove_cover')}
               </button>
             )}
           </div>
           {game.metadata?.provider === 'steam-guess' && (
             <p className="note" style={{ fontSize: 11.5, marginTop: 8 }}>
-              Coveret er gjettet ut fra navnet. Stemmer det ikke, bytt det her.
+              {t('game.cover_guessed')}
             </p>
           )}
         </div>
@@ -185,35 +182,35 @@ export function GameDetail({
               }}
             />
           ) : (
-            <h1 onDoubleClick={() => setRenaming(true)} title="Dobbeltklikk for å endre navn">
+            <h1 onDoubleClick={() => setRenaming(true)} title={t('game.rename_hint')}>
               {game.name}
             </h1>
           )}
           <p className="note">
             {SOURCE_LABELS[game.source]}
-            {game.installed ? ' · Installert' : ' · Ikke installert'}
-            {frozenNow ? ' · ❄ Frosset' : running ? ' · Kjører nå' : ''}
+            {' · '}{game.installed ? t('common.installed') : t('common.not_installed')}
+            {frozenNow ? ` · ${t('common.frozen')}` : running ? t('game.running_now') : ''}
           </p>
 
           <div className="actions">
             <button className="btn btn-accent" onClick={onPlay} disabled={!game.installed || running}>
-              {running ? 'Kjører' : '▶ Spill'}
+              {running ? t('common.running') : t('common.play')}
             </button>
             {running &&
               (frozenNow && freeze ? (
                 <button className="btn" onClick={() => onResume(freeze.id)}>
-                  ▶ Fortsett spillet
+                  {t('game.resume')}
                 </button>
               ) : (
                 <button className="btn" onClick={onFreeze}>
-                  ❄ Frys nå
+                  {t('game.freeze')}
                 </button>
               ))}
             <button className="btn" onClick={onToggleFavorite}>
-              {game.favorite ? '★ Favoritt' : '☆ Favoritt'}
+              {game.favorite ? t('game.favorite') : t('game.unfavorite')}
             </button>
             <button className="btn" onClick={() => setRenaming(true)}>
-              Endre navn
+              {t('game.rename')}
             </button>
             <button
               className="btn"
@@ -221,57 +218,57 @@ export function GameDetail({
                 try {
                   await revealItemInDir(await api.openGameFolder(game.id));
                 } catch (error) {
-                  onToast('Mappen kunne ikke åpnes', String(error));
+                  onToast(t('common.open_folder'), tr(error));
                 }
               }}
             >
-              Åpne mappen
+              {t('common.open_folder')}
             </button>
             <button className="btn btn-ghost btn-danger" onClick={() => setRemoving(true)}>
-              Fjern
+              {t('game.remove')}
             </button>
           </div>
 
           <div className="facts" style={{ maxWidth: 560, marginBottom: 22 }}>
             <div className="fact">
-              <span>Sist spilt</span>
-              <span>{game.lastPlayed ? formatRelativeDay(game.lastPlayed) : 'Aldri'}</span>
+              <span>{t('game.last_played')}</span>
+              <span>{game.lastPlayed ? formatRelativeDay(game.lastPlayed) : t('common.never')}</span>
             </div>
             <div className="fact">
-              <span>Spilletid (fra launcher)</span>
+              <span>{t('game.playtime')}</span>
               <span>{formatPlaytime(game.playtimeSeconds)}</span>
             </div>
             <div className="fact">
-              <span>Størrelse</span>
+              <span>{t('game.size')}</span>
               <span>{game.sizeBytes ? formatBytes(game.sizeBytes) : '—'}</span>
             </div>
             <div className="fact">
-              <span>Mappe</span>
+              <span>{t('game.folder')}</span>
               <span style={{ wordBreak: 'break-all' }}>{game.installDir ?? '—'}</span>
             </div>
             <div className="fact">
-              <span>Starter</span>
+              <span>{t('game.starts')}</span>
               <span style={{ wordBreak: 'break-all' }}>{launchDescription(game)}</span>
             </div>
             <div className="fact">
-              <span>Oppdaget</span>
+              <span>{t('game.discovered')}</span>
               <span>{formatDateTime(game.discoveredAt)}</span>
             </div>
           </div>
 
-          <SettingGroup title="Frys og lagring">
+          <SettingGroup title={t('game.freeze_group')}>
             <SettingRow
-              title="Lagringsmappe"
+              title={t('game.save_dir')}
               description={
                 saveDir ? (
                   <code>{saveDir}</code>
                 ) : (
-                  'Ikke valgt. Med en lagringsmappe tar «Frys nå» også en kopi av lagringen, som overlever en omstart.'
+                  t('game.save_dir_none')
                 )
               }
             >
               <button className={`btn sm${searching ? ' busy' : ''}`} onClick={() => void findSaves()} disabled={searching}>
-                Finn
+                {t('common.find')}
               </button>
               <button
                 className="btn sm"
@@ -280,27 +277,27 @@ export function GameDetail({
                   if (typeof picked === 'string') void chooseSaveDir(picked);
                 }}
               >
-                Velg…
+                {t('common.choose')}
               </button>
               {saveDir && (
                 <button className="btn sm btn-ghost" onClick={() => void chooseSaveDir('')}>
-                  Fjern
+                  {t('common.remove')}
                 </button>
               )}
             </SettingRow>
             <SettingRow
-              title="Frysepunkter"
-              description={points.length === 0 ? 'Ingen ennå. Trykk F7 midt i en cutscene.' : `${points.length} for dette spillet`}
+              title={t('game.freeze_points')}
+              description={points.length === 0 ? t('game.freeze_points_none', { key: freezeKey }) : t('game.freeze_points_count', { n: points.length })}
               index={1}
             >
               <button className="btn sm" onClick={onGoFreezes}>
-                Vis alle
+                {t('game.show_all')}
               </button>
             </SettingRow>
           </SettingGroup>
 
-          <SettingGroup title="Etiketter">
-            <SettingRow title="Tagger" description="Kommaseparert. Brukes i søk.">
+          <SettingGroup title={t('game.tags_group')}>
+            <SettingRow title={t('game.tags')} description={t('game.tags_hint')}>
               <input
                 type="text"
                 value={tagsDraft}
@@ -324,7 +321,7 @@ export function GameDetail({
               await api.setCustomCover(game.id, png);
               onCoverChanged();
             } catch (error) {
-              onToast('Coveret ble ikke lagret', String(error));
+              onToast(t('game.cover_failed'), tr(error));
             }
           }}
         />
@@ -332,9 +329,9 @@ export function GameDetail({
 
       {removing && (
         <Confirm
-          title={`Fjerne ${game.name} fra biblioteket?`}
-          body="Spill en launcher fortsatt rapporterer blir skjult i stedet for slettet, og kan hentes tilbake fra biblioteket."
-          confirmLabel="Fjern"
+          title={t('game.remove_confirm', { name: game.name })}
+          body={t('game.remove_body')}
+          confirmLabel={t('game.remove')}
           danger
           onCancel={() => setRemoving(false)}
           onConfirm={async () => {
@@ -342,20 +339,19 @@ export function GameDetail({
             try {
               onRemoved(await api.removeGame(game.id));
             } catch (error) {
-              onToast('Spillet ble ikke fjernet', String(error));
+              onToast(t('game.remove_failed'), tr(error));
             }
           }}
         />
       )}
 
       {candidates && (
-        <Modal title="Hvor ligger lagringen?" onClose={() => setCandidates(null)} wide>
+        <Modal title={t('game.saves_title')} onClose={() => setCandidates(null)} wide>
           <p className="note" style={{ marginBottom: 12 }}>
-            GameHub har lett i de vanlige mappene etter noe som heter det samme som spillet. Velg den som stemmer —
-            er du usikker, er den som ble endret sist som regel riktig.
+            {t('game.saves_blurb')}
           </p>
           {candidates.length === 0 ? (
-            <p className="empty">Fant ingen mappe som ligner. Bruk «Velg…» og pek på den selv.</p>
+            <p className="empty">{t('game.saves_none')}</p>
           ) : (
             candidates.map((candidate, index) => (
               <div className="list-row" key={candidate.path} style={{ ['--i' as string]: index }}>
@@ -364,15 +360,15 @@ export function GameDetail({
                     {candidate.path}
                   </div>
                   <div className="meta">
-                    {candidate.location} · {candidate.files} filer · {formatBytes(candidate.bytes)}
-                    {candidate.modifiedAt ? ` · endret ${formatRelativeDay(candidate.modifiedAt)}` : ''}
+                    {t('game.saves_meta', { location: candidate.location, files: candidate.files, size: formatBytes(candidate.bytes) })}
+                    {candidate.modifiedAt ? t('game.saves_modified', { when: formatRelativeDay(candidate.modifiedAt) }) : ''}
                   </div>
                 </div>
                 <span className={`badge-pill ${candidate.confidence >= 90 ? 'ok' : candidate.confidence >= 60 ? 'accent' : ''}`}>
                   {candidate.confidence} %
                 </span>
                 <button className="btn sm btn-accent" onClick={() => void chooseSaveDir(candidate.path)}>
-                  Bruk denne
+                  {t('game.saves_use')}
                 </button>
               </div>
             ))

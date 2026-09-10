@@ -17,6 +17,8 @@ mod replay;
 mod autostart;
 mod commands;
 mod launch;
+mod msg;
+mod tray;
 mod perf;
 mod process;
 mod state;
@@ -25,12 +27,7 @@ mod watcher;
 
 use std::sync::Arc;
 
-use tauri::{
-    menu::{Menu, MenuItem},
-    Emitter,
-    tray::TrayIconBuilder,
-    Manager, WindowEvent,
-};
+use tauri::{Emitter, Manager, WindowEvent};
 
 use state::AppState;
 
@@ -78,7 +75,7 @@ pub fn run() {
             // background it is about to be asked to display.
             crate::assets::grant(app.handle(), &state);
 
-            build_tray(app.handle())?;
+            tray::build(app.handle(), &state.settings().language)?;
 
             // The updater plugin, so the front end's `check()` and
             // `downloadAndInstall()` have something to talk to. Registered
@@ -132,7 +129,7 @@ pub fn run() {
             if state.settings().replay.enabled {
                 if let Err(error) = commands::apply_replay(app.handle(), &state) {
                     eprintln!("replay could not start: {error}");
-                    let _ = app.handle().emit("toast", ("Replay startet ikke", error));
+                    let _ = app.handle().emit("toast", (msg::plain("toast_replay_not_started"), error));
                 }
             }
 
@@ -215,38 +212,4 @@ pub fn run() {
         ])
         .run(tauri::generate_context!())
         .expect("GameHub failed to start");
-}
-
-fn build_tray(app: &tauri::AppHandle) -> tauri::Result<()> {
-    let open = MenuItem::with_id(app, "open", "Åpne GameHub", true, None::<&str>)?;
-    let scan = MenuItem::with_id(app, "scan", "Se etter nye spill", true, None::<&str>)?;
-    let quit = MenuItem::with_id(app, "quit", "Avslutt", true, None::<&str>)?;
-    let menu = Menu::with_items(app, &[&open, &scan, &quit])?;
-
-    TrayIconBuilder::with_id("main")
-        .icon(app.default_window_icon().cloned().ok_or_else(|| {
-            tauri::Error::AssetNotFound("the tray needs the app icon".into())
-        })?)
-        .tooltip("GameHub")
-        .menu(&menu)
-        .show_menu_on_left_click(false)
-        .on_menu_event(|app, event| match event.id.as_ref() {
-            "open" => {
-                if let Some(window) = app.get_webview_window("main") {
-                    let _ = window.show();
-                    let _ = window.set_focus();
-                }
-            }
-            "scan" => {
-                let handle = app.clone();
-                let state = app.state::<Arc<AppState>>().inner().clone();
-                std::thread::spawn(move || {
-                    commands::run_scan(&handle, &state);
-                });
-            }
-            "quit" => app.exit(0),
-            _ => {}
-        })
-        .build(app)?;
-    Ok(())
 }

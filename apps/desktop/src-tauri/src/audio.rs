@@ -118,8 +118,8 @@ impl SystemAudio {
         let host = cpal::default_host();
         let device = host
             .default_output_device()
-            .ok_or_else(|| "Ingen lydenhet er valgt som standard utgang i Windows.".to_string())?;
-        let device_name = device.name().unwrap_or_else(|_| "Standard lydenhet".into());
+            .ok_or_else(|| crate::msg::plain("no_audio_device"))?;
+        let device_name = device.name().unwrap_or_else(|_| crate::msg::plain("default_audio_device"));
 
         // On WASAPI an output device opened for input *is* loopback capture —
         // but cpal answers `default_input_config()` on an output device with
@@ -131,7 +131,7 @@ impl SystemAudio {
             Ok(config) => config,
             Err(_) => device
                 .default_output_config()
-                .map_err(|e| format!("Lydenheten «{device_name}» kan ikke tas opp fra: {e}"))?,
+                .map_err(|e| crate::msg::code("audio_device_unusable", &[&device_name, &e.to_string()]))?,
         };
         let format = PcmFormat {
             sample_rate: supported.sample_rate().0,
@@ -160,7 +160,7 @@ impl SystemAudio {
                     let sink = queue.clone();
                     let error_sink = failure.clone();
                     let on_error = move |error: cpal::StreamError| {
-                        *error_sink.lock() = Some(format!("Lydopptaket stoppet: {error}"));
+                        *error_sink.lock() = Some(crate::msg::code("audio_stopped", &[&error.to_string()]));
                     };
                     let built = match sample_format {
                         cpal::SampleFormat::F32 => device.build_input_stream(
@@ -196,13 +196,13 @@ impl SystemAudio {
                     let stream = match built {
                         Ok(stream) => stream,
                         Err(error) => {
-                            let _ = ready_tx.send(Err(format!("Lydopptaket kunne ikke startes: {error}")));
+                            let _ = ready_tx.send(Err(crate::msg::code("audio_start", &[&error.to_string()])));
                             return;
                         }
                     };
                     use cpal::traits::StreamTrait;
                     if let Err(error) = stream.play() {
-                        let _ = ready_tx.send(Err(format!("Lydopptaket kunne ikke startes: {error}")));
+                        let _ = ready_tx.send(Err(crate::msg::code("audio_start", &[&error.to_string()])));
                         return;
                     }
                     let _ = ready_tx.send(Ok(()));
@@ -211,7 +211,7 @@ impl SystemAudio {
                     }
                     drop(stream);
                 })
-                .map_err(|e| format!("Lydtråden kunne ikke startes: {e}"))?
+                .map_err(|e| crate::msg::code("audio_thread", &[&e.to_string()]))?
         };
 
         match ready_rx.recv_timeout(Duration::from_secs(5)) {
@@ -223,7 +223,7 @@ impl SystemAudio {
             }
             Err(_) => {
                 stop.store(true, Ordering::Relaxed);
-                return Err("Lydenheten svarte ikke.".into());
+                return Err(crate::msg::plain("audio_no_answer"));
             }
         }
 

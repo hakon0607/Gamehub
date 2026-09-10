@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow';
 import { writeText } from '@tauri-apps/plugin-clipboard-manager';
 import { api, type ClipItem, type FreezeStatus, type ReplayStatus } from './api';
+import { setLanguage, t, tr } from './i18n';
 
 /**
  * Quick Tools: a small always-on-top window over whatever is in front —
@@ -24,11 +25,16 @@ export function QuickTools() {
   const [freeze, setFreeze] = useState<FreezeStatus | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const [ready, setReady] = useState(false);
 
   const hide = () => void getCurrentWebviewWindow().hide();
 
   useEffect(() => {
     inputRef.current?.focus();
+    void api.getSettings().then((s) => {
+      setLanguage(s.language);
+      setReady(true);
+    });
     void api.getClipboard().then((items) => setClips(items.slice(0, 5)));
     void api.replayStatus().then(setReplay);
     void api.freezeStatus().then(setFreeze);
@@ -49,26 +55,26 @@ export function QuickTools() {
     const active = freeze?.active?.state === 'frozen' ? freeze.active : null;
     const base: Command[] = [
       ...(active
-        ? [{ id: 'resume', label: `Fortsett ${active.gameName}`, hint: 'spillet er frosset', icon: '▶', run: async () => { await api.resumeFreeze(active.id); setMessage('Spillet fortsetter'); } }]
+        ? [{ id: 'resume', label: t('quick.resume', { name: active.gameName }), hint: t('quick.resume_hint'), icon: '▶', run: async () => { await api.resumeFreeze(active.id); setMessage(t('quick.resumed')); } }]
         : freeze?.currentGameId
-          ? [{ id: 'freeze', label: `Frys ${freeze.currentGameName} nå`, hint: 'stopper spillet der det står', icon: '❄', run: async () => { const p = await api.freezeNow(); setMessage(`${p.gameName} er frosset${p.saveCopy ? ' · lagringen er kopiert' : ''}`); } }]
+          ? [{ id: 'freeze', label: t('quick.freeze', { name: freeze.currentGameName ?? '' }), hint: t('quick.freeze_hint'), icon: '❄', run: async () => { const p = await api.freezeNow(); setMessage(t('quick.frozen', { name: p.gameName, saved: p.saveCopy ? t('toast.frozen_saved') : '' })); } }]
           : []),
       ...(replay?.running
-        ? [{ id: 'clip', label: 'Lagre replay-klipp', hint: `siste ${replay.bufferedSeconds} sek er i bufferet`, icon: '⏺', run: async () => { const c = await api.saveReplay(); setMessage(`Klipp lagret under ${c.gameName}`); } }]
-        : [{ id: 'replay-on', label: replay?.enabled ? 'Replay er på, men tar ikke opp' : 'Slå på replay', hint: replay?.problem ?? 'begynner å ta opp skjermen', icon: '⏺', run: async () => { await api.setReplayEnabled(true); setMessage('Replay er på'); } }]),
-      { id: 'screenshot', label: 'Ta screenshot', hint: 'lagres under spillet som kjører', icon: '⎙', run: async () => { const shot = await api.takeScreenshot(); setMessage(`Lagret under ${shot.gameName}`); } },
-      { id: 'scan', label: 'Se etter nye spill', hint: 'skanner alle launchere', icon: '↻', run: async () => { await api.scanNow(); setMessage('Skanning ferdig'); } },
+        ? [{ id: 'clip', label: t('quick.clip'), hint: t('quick.clip_hint', { n: replay.bufferedSeconds }), icon: '⏺', run: async () => { const c = await api.saveReplay(); setMessage(t('quick.clip_saved', { name: c.gameName })); } }]
+        : [{ id: 'replay-on', label: replay?.enabled ? t('quick.replay_on_not_recording') : t('quick.replay_on'), hint: replay?.problem ? tr(replay.problem) : t('quick.replay_on_hint'), icon: '⏺', run: async () => { await api.setReplayEnabled(true); setMessage(t('quick.replay_now_on')); } }]),
+      { id: 'screenshot', label: t('quick.screenshot'), hint: t('quick.screenshot_hint'), icon: '⎙', run: async () => { const shot = await api.takeScreenshot(); setMessage(t('quick.saved_under', { name: shot.gameName })); } },
+      { id: 'scan', label: t('quick.scan'), hint: t('quick.scan_hint'), icon: '↻', run: async () => { await api.scanNow(); setMessage(t('quick.scan_done')); } },
       ...clips.map((clip, index) => ({
         id: `clip-${clip.id}`,
-        label: `Kopier: ${clip.text.slice(0, 48).replace(/\s+/g, ' ')}`,
-        hint: index === 0 ? 'siste kopierte' : 'fra utklippstavlen',
+        label: t('quick.copy', { text: clip.text.slice(0, 48).replace(/\s+/g, ' ') }),
+        hint: index === 0 ? t('quick.copy_last') : t('quick.copy_hint'),
         icon: '⎘',
-        run: async () => { await writeText(clip.text); setMessage('Kopiert'); },
+        run: async () => { await writeText(clip.text); setMessage(t('quick.copied')); },
       })),
     ];
     const q = query.trim().toLowerCase();
     return q ? base.filter((c) => c.label.toLowerCase().includes(q)) : base;
-  }, [query, clips, replay, freeze]);
+  }, [query, clips, replay, freeze, ready]);
 
   useEffect(() => setSelected(0), [query]);
 
@@ -77,7 +83,7 @@ export function QuickTools() {
       await command.run();
       window.setTimeout(hide, 900);
     } catch (error) {
-      setMessage(String(error));
+      setMessage(tr(error));
     }
   };
 
@@ -92,10 +98,10 @@ export function QuickTools() {
       }}
     >
       <div className="quick-inner">
-        <input ref={inputRef} className="quick-input" placeholder="Hva vil du gjøre?" value={query} onChange={(e) => setQuery(e.target.value)} />
+        <input ref={inputRef} className="quick-input" placeholder={t('quick.placeholder')} value={query} onChange={(e) => setQuery(e.target.value)} />
         <div className="quick-list">
           {commands.length === 0 ? (
-            <p className="quick-empty">Ingenting som passer «{query}»</p>
+            <p className="quick-empty">{t('quick.empty', { q: query })}</p>
           ) : (
             commands.map((command, index) => (
               <button key={command.id} className="quick-item" aria-selected={index === selected} onMouseEnter={() => setSelected(index)} onClick={() => void run(command)}>

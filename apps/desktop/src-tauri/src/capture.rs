@@ -40,35 +40,31 @@ pub fn capture(
     taken_at: &str,
     monitor_index: usize,
 ) -> Result<(PathBuf, u64), String> {
-    let monitors = xcap::Monitor::all().map_err(|e| format!("No display could be read: {e}"))?;
+    let monitors = xcap::Monitor::all().map_err(|e| crate::msg::code("display_read", &[&e.to_string()]))?;
     if monitors.is_empty() {
-        return Err("GameHub found no display to capture.".into());
+        return Err(crate::msg::plain("no_display"));
     }
     let monitor = monitors
         .get(monitor_index)
         .or_else(|| monitors.first())
-        .ok_or("GameHub found no display to capture.")?;
+        .ok_or_else(|| crate::msg::plain("no_display"))?;
 
     let image = monitor
         .capture_image()
-        .map_err(|e| format!("The screen could not be captured: {e}"))?;
+        .map_err(|e| crate::msg::code("capture_failed", &[&e.to_string()]))?;
 
     if is_blank(&image) {
-        return Err(
-            "The captured frame was empty. Games running in exclusive fullscreen cannot be captured this \
-             way — switch the game to borderless windowed and try again."
-                .into(),
-        );
+        return Err(crate::msg::plain("blank_frame"));
     }
 
     let folder = media::folder_for(root, game_name);
-    std::fs::create_dir_all(&folder).map_err(|e| format!("The screenshot folder could not be created: {e}"))?;
+    std::fs::create_dir_all(&folder).map_err(|e| crate::msg::code("shot_folder", &[&e.to_string()]))?;
 
     let name = media::file_name(game_name, taken_at);
     let path = gamehub_detect::safepath::join_within(&folder, &name).map_err(|e| e.to_string())?;
     image
         .save(&path)
-        .map_err(|e| format!("The screenshot could not be written: {e}"))?;
+        .map_err(|e| crate::msg::code("shot_write", &[&e.to_string()]))?;
 
     let size = std::fs::metadata(&path).map(|m| m.len()).unwrap_or(0);
     Ok((path, size))

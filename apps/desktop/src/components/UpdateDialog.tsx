@@ -2,6 +2,8 @@ import { useState } from 'react';
 import type { Update } from '@tauri-apps/plugin-updater';
 import { downloadAndInstall, describeUpdateError, type UpdateStatus } from '../updater';
 import { Modal } from '../ui';
+import { t } from '../i18n';
+import { formatDate } from '../format';
 
 /**
  * The "new version available" prompt.
@@ -43,29 +45,28 @@ export function UpdateDialog({
 
   return (
     <Modal
-      title={`GameHub ${status.version} er klar`}
+      title={t('update.title', { version: status.version ?? '' })}
       onClose={() => !installing && onClose()}
       actions={
         installing ? null : (
           <>
             <button className="btn" onClick={() => onLater(status.version ?? '')}>
-              Senere
+              {t('update.later')}
             </button>
             <button className="btn btn-accent" onClick={() => void install()} autoFocus>
-              Oppdater nå
+              {t('update.now')}
             </button>
           </>
         )
       }
     >
       <p className="version-note">
-        Du har {status.currentVersion}
-        {status.date ? ` · publisert ${new Date(status.date).toLocaleDateString()}` : ''}
+        {t('update.you_have', { version: status.currentVersion })}
+        {status.date ? t('update.published', { date: formatDate(status.date) }) : ''}
       </p>
       {status.notes && <div className="notes">{status.notes}</div>}
       <p className="note">
-        Oppdateringen lastes ned, sjekkes mot signaturen og installeres. GameHub starter på nytt etterpå.
-        Biblioteket, innstillingene, klippene og frysepunktene dine rører den ikke.
+        {t('update.body')}
       </p>
       {installing && (
         <div style={{ marginTop: 16 }}>
@@ -73,7 +74,7 @@ export function UpdateDialog({
             <span style={{ width: indeterminate ? '100%' : `${percent}%` }} />
           </div>
           <p className="note" style={{ marginTop: 8 }}>
-            {indeterminate ? 'Laster ned …' : percent < 100 ? `Laster ned … ${percent} %` : 'Installerer og starter på nytt …'}
+            {indeterminate ? t('update.downloading') : percent < 100 ? t('update.downloading_pct', { pct: percent }) : t('update.installing')}
           </p>
         </div>
       )}

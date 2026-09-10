@@ -1,6 +1,7 @@
 import type { Game } from '@gamehub/shared';
 import { SOURCE_LABELS } from '@gamehub/shared';
 import { convertFileSrc } from '@tauri-apps/api/core';
+import { t } from '../i18n';
 
 function initials(name: string): string {
   const words = name.split(/\s+/).filter(Boolean);
@@ -37,19 +38,19 @@ export function GameCard({
 
   return (
     <div className="card" style={{ ['--i' as string]: index }}>
-      <button className="card-open" onClick={onOpen} aria-label={`Åpne ${game.name}`}>
+      <button className="card-open" onClick={onOpen} aria-label={t('common.open_game', { name: game.name })}>
         <span className="cover">
           {cover ? <img src={convertFileSrc(cover)} alt="" loading="lazy" /> : <span className="initials">{initials(game.name)}</span>}
           <span className="badge">{SOURCE_LABELS[game.source]}</span>
           {game.favorite && <span className="fav-mark">★</span>}
           {frozen ? (
-            <span className="badge badge-frozen">❄ Frosset</span>
+            <span className="badge badge-frozen">{t('common.frozen')}</span>
           ) : (
-            running && <span className="badge badge-running">Spiller nå</span>
+            running && <span className="badge badge-running">{t('common.playing_now')}</span>
           )}
           {guessed && !running && (
-            <span className="badge badge-guess" title="Coveret er gjettet ut fra navnet. Bytt det på spillsiden.">
-              gjettet
+            <span className="badge badge-guess" title={t('common.guessed_title')}>
+              {t('common.guessed')}
             </span>
           )}
           <span className="play-scrim" aria-hidden="true" />
@@ -58,16 +59,16 @@ export function GameCard({
           <span className="card-title" title={game.name}>
             {game.name}
           </span>
-          <span className="card-meta">{footer ?? (game.installed ? 'Installert' : 'Ikke installert')}</span>
+          <span className="card-meta">{footer ?? (game.installed ? t('common.installed') : t('common.not_installed'))}</span>
         </span>
       </button>
       <button
         className="play-pill"
         onClick={onPlay}
         disabled={!canPlay}
-        aria-label={running ? `${game.name} kjører` : `Spill ${game.name}`}
+        aria-label={running ? t('common.game_running', { name: game.name }) : t('common.play_game', { name: game.name })}
       >
-        {running ? 'Kjører' : game.installed ? '▶ Spill' : 'Ikke installert'}
+        {running ? t('common.running') : game.installed ? t('common.play') : t('common.not_installed')}
       </button>
     </div>
   );

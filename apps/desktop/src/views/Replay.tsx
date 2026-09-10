@@ -4,6 +4,7 @@ import { revealItemInDir } from '@tauri-apps/plugin-opener';
 import { api, events, type Clip, type ReplayStatus, type Settings } from '../api';
 import { formatBytes, formatDuration, formatRelativeDay, formatSeconds } from '../format';
 import { Confirm, PageHead, Slider, Toggle, useBusy } from '../ui';
+import { t, tr } from '../i18n';
 
 /**
  * Instant replay: the buffer's state, the length of it, and the clips saved.
@@ -17,11 +18,13 @@ export function Replay({
   onSettings,
   onToast,
   onOpenSettings,
+  hotkey,
 }: {
   settings: Settings;
   onSettings: (next: Settings) => Promise<void>;
   onToast: (title: string, body?: string) => void;
   onOpenSettings: () => void;
+  hotkey: string;
 }) {
   const [status, setStatus] = useState<ReplayStatus | null>(null);
   const [clips, setClips] = useState<Clip[]>([]);
@@ -53,10 +56,10 @@ export function Replay({
     run(async () => {
       try {
         const clip = await api.saveReplay(seconds);
-        onToast('Klipp lagret', `${clip.gameName} · ${formatSeconds(clip.seconds)}${clip.hasAudio ? ' · med lyd' : ' · uten lyd'}`);
+        onToast(t('toast.clip_saved'), `${clip.gameName} · ${formatSeconds(clip.seconds)}${clip.hasAudio ? t('toast.clip_with_audio') : t('toast.clip_without_audio')}`);
         load();
       } catch (error) {
-        onToast('Klippet ble ikke lagret', String(error));
+        onToast(t('toast.clip_failed'), tr(error));
       }
     });
 
@@ -66,7 +69,7 @@ export function Replay({
       await onSettings({ ...settings, replay: { ...replay, enabled: !replay.enabled } });
       load();
     } catch (error) {
-      onToast('Replay startet ikke', String(error));
+      onToast(t('toast.replay_failed'), tr(error));
       load();
     }
   };
@@ -75,17 +78,13 @@ export function Replay({
   const shown = clips.filter((c) => game === 'all' || c.gameName === game);
   const totalBytes = clips.reduce((sum, c) => sum + c.sizeBytes, 0);
 
-  if (!status) return <p className="empty">Laster …</p>;
+  if (!status) return <p className="empty">{t('common.loading')}</p>;
 
   if (!status.ffmpegPath) {
     return (
       <div className="view">
-        <PageHead title="Replay" />
-        <div className="notice danger">
-          Replay trenger <strong>ffmpeg</strong>, og GameHub finner den ikke. Den følger normalt med installeren fra
-          GitHub. Bygger du selv: kjør <code>pnpm fetch-ffmpeg</code> før du bygger, eller installer ffmpeg slik at den
-          ligger i PATH. Resten av GameHub fungerer som normalt.
-        </div>
+        <PageHead title={t('replay.title')} />
+        <div className="notice danger">{t('replay.no_ffmpeg')}</div>
       </div>
     );
   }
@@ -96,11 +95,11 @@ export function Replay({
   return (
     <div className="view">
       <PageHead
-        title="Replay"
-        blurb="Skjermen tas opp fortløpende, men bare de siste minuttene finnes — alt eldre overskrives og havner aldri på disken. F8 lagrer det du nettopp så."
+        title={t('replay.title')}
+        blurb={t('replay.blurb', { key: hotkey })}
       >
         <button className="btn" onClick={onOpenSettings}>
-          Flere innstillinger
+          {t('replay.more_settings')}
         </button>
       </PageHead>
 
@@ -109,52 +108,52 @@ export function Replay({
           <div className="row" style={{ justifyContent: 'space-between' }}>
             <h3 className="section-title" style={{ margin: 0 }}>
               <span className={`pulse${status.running ? ' rec' : ''}`} style={status.running ? {} : { animation: 'none', background: 'var(--ink-faint)' }} />
-              {status.running ? 'Tar opp' : replay.enabled ? 'Slått på, men tar ikke opp' : 'Av'}
+              {status.running ? t('replay.recording') : replay.enabled ? t('replay.on_not_recording') : t('replay.off')}
             </h3>
             <label className="row" style={{ gap: 8, fontSize: 12.5, color: 'var(--ink-dim)' }}>
-              {replay.enabled ? 'På' : 'Av'} <Toggle checked={replay.enabled} onChange={() => void toggle()} label="Replay" />
+              {replay.enabled ? t('common.on') : t('common.off')} <Toggle checked={replay.enabled} onChange={() => void toggle()} label={t('replay.title')} />
             </label>
           </div>
 
-          {status.problem && <div className="notice danger" style={{ marginTop: 12 }}>{status.problem}</div>}
+          {status.problem && <div className="notice danger" style={{ marginTop: 12 }}>{tr(status.problem)}</div>}
 
           <div className="buffer-meter">
             <span style={{ width: `${status.running ? fill : 0}%` }} />
           </div>
           <p className="note">
             {status.running
-              ? `${formatSeconds(status.bufferedSeconds)} av ${formatSeconds(status.bufferSeconds)} i bufferet · ca. ${status.bufferEstimateMb} MB på disk`
-              : `Bufferet holder ${formatSeconds(status.bufferSeconds)} når det er på · ca. ${status.bufferEstimateMb} MB på disk`}
+              ? t('replay.buffer_status', { have: formatSeconds(status.bufferedSeconds), total: formatSeconds(status.bufferSeconds), mb: status.bufferEstimateMb })
+              : t('replay.buffer_idle', { total: formatSeconds(status.bufferSeconds), mb: status.bufferEstimateMb })}
           </p>
 
           <div className="row" style={{ marginTop: 14 }}>
             <span className={`badge-pill ${status.running ? (status.audio.systemAudio ? 'ok' : 'warn') : ''}`}>
               {status.running
                 ? status.audio.systemAudio
-                  ? `🔊 Spillyd fra ${status.audio.systemDevice ?? 'standard lydenhet'}`
+                  ? t('replay.audio_from', { device: tr(status.audio.systemDevice ?? '') })
                   : replay.systemAudio
-                    ? '🔇 Ingen spillyd'
-                    : '🔇 Spillyd av'
+                    ? t('replay.audio_none')
+                    : t('replay.audio_off')
                 : replay.systemAudio
-                  ? '🔊 Spillyd på'
-                  : '🔇 Spillyd av'}
+                  ? t('replay.audio_on')
+                  : t('replay.audio_off')}
             </span>
-            {status.audio.microphone && <span className="badge-pill ok">🎙 Mikrofon</span>}
+            {status.audio.microphone && <span className="badge-pill ok">{t('replay.mic')}</span>}
             {status.running && (
               <span className="badge-pill">
-                {replay.scaleHeight ? `${replay.scaleHeight}p` : 'Skjermens oppløsning'} · {replay.fps} fps
+                {replay.scaleHeight ? `${replay.scaleHeight}p` : t('replay.native')} · {replay.fps} fps
               </span>
             )}
           </div>
           {status.audio.note && replay.systemAudio && (
             <p className="note" style={{ marginTop: 8, color: 'var(--warn)' }}>
-              {status.audio.note}
+              {tr(status.audio.note)}
             </p>
           )}
 
           <div style={{ marginTop: 18 }}>
             <div className="row" style={{ justifyContent: 'space-between', marginBottom: 6 }}>
-              <span className="field-label">Hvor mye som huskes</span>
+              <span className="field-label">{t('replay.buffer_length')}</span>
               <span className="note" style={{ fontSize: 12 }}>
                 {formatSeconds(status.minBufferSeconds)} – {formatSeconds(status.maxBufferSeconds)}
               </span>
@@ -170,17 +169,17 @@ export function Replay({
               }}
             />
             <p className="note" style={{ fontSize: 12, marginTop: 4 }}>
-              Lengre buffer koster bare diskplass, ikke ytelse. Endringen tar effekt med en gang.
+              {t('replay.buffer_hint')}
             </p>
           </div>
         </div>
 
         <div className="panel">
           <h3 className="section-title" style={{ marginTop: 0 }}>
-            Lagre nå
+            {t('replay.save_now')}
           </h3>
           <p className="note" style={{ marginBottom: 12 }}>
-            <kbd className="key">F8</kbd> lagrer de siste {formatSeconds(replay.saveSeconds)}. Velg en annen lengde her:
+            {t('replay.save_hint', { key: hotkey, time: formatSeconds(replay.saveSeconds) })}
           </p>
           <div className="quick-lengths">
             {lengths.map((seconds) => (
@@ -195,14 +194,14 @@ export function Replay({
             ))}
           </div>
           <p className="note" style={{ fontSize: 12, marginTop: 10 }}>
-            Har det gått kortere tid siden replay ble slått på, blir klippet bare så langt som det finnes opptak.
+            {t('replay.short_hint')}
           </p>
           <div className="row" style={{ marginTop: 14 }}>
             <button className="btn btn-accent" disabled={busy || !status.running} onClick={() => void save()}>
-              ⏺ Lagre {formatSeconds(replay.saveSeconds)}
+              {t('replay.save_button', { time: formatSeconds(replay.saveSeconds) })}
             </button>
             <button className="btn" onClick={() => void revealItemInDir(status.clipFolder)}>
-              Åpne mappen
+              {t('common.open_folder')}
             </button>
           </div>
         </div>
@@ -211,14 +210,14 @@ export function Replay({
       <div className="page-head" style={{ marginBottom: 12 }}>
         <div>
           <h2 className="section-title" style={{ margin: 0 }}>
-            Klipp <span className="countdown">{clips.length} · {formatBytes(totalBytes)}</span>
+            {t('replay.clips')} <span className="countdown">{t('replay.clips_meta', { n: clips.length, size: formatBytes(totalBytes) })}</span>
           </h2>
         </div>
       </div>
       {games.length > 1 && (
         <div className="filters">
           <button className="chip" aria-pressed={game === 'all'} onClick={() => setGame('all')}>
-            Alle
+            {t('common.all')}
           </button>
           {games.map((name) => (
             <button key={name} className="chip" aria-pressed={game === name} onClick={() => setGame(name)}>
@@ -230,14 +229,13 @@ export function Replay({
 
       {clips.length === 0 ? (
         <p className="empty">
-          Ingen klipp ennå. Slå på replay, spill litt, og trykk F8 når noe skjer — klippet havner her og under{' '}
-          <code>{status.clipFolder}</code>.
+          {t('replay.empty', { key: hotkey, folder: status.clipFolder })}
         </p>
       ) : (
         <div className="shots">
           {shown.map((clip, index) => (
             <figure key={clip.id} className="shot" style={{ ['--i' as string]: index }}>
-              <button onClick={() => setWatching(clip)} aria-label={`Spill av ${clip.gameName}`}>
+              <button onClick={() => setWatching(clip)} aria-label={t('replay.play_clip', { name: clip.gameName })}>
                 <video src={convertFileSrc(clip.path)} preload="metadata" muted />
                 <span className="play-glyph">▶</span>
                 <span className="duration">{formatDuration(clip.seconds)}</span>
@@ -250,7 +248,7 @@ export function Replay({
                 <span>{formatRelativeDay(clip.recordedAt)}</span>
                 <button
                   className="shot-star"
-                  aria-label={clip.favorite ? 'Fjern favoritt' : 'Marker som favoritt'}
+                  aria-label={clip.favorite ? t('replay.unfavorite') : t('replay.favorite')}
                   onClick={async () => {
                     await api.setClipFavorite(clip.id, !clip.favorite);
                     load();
@@ -271,16 +269,16 @@ export function Replay({
             <div className="dialog-actions">
               <span className="note" style={{ flex: 1, alignSelf: 'center' }}>
                 {watching.gameName} · {formatBytes(watching.sizeBytes)}
-                {watching.hasAudio ? '' : ' · uten lyd'}
+                {watching.hasAudio ? '' : t('replay.without_audio')}
               </span>
               <button className="btn" onClick={() => void revealItemInDir(watching.path)}>
-                Vis i mappe
+                {t('common.show_in_folder')}
               </button>
               <button className="btn btn-danger" onClick={() => setDeleting(watching)}>
-                Slett
+                {t('common.delete')}
               </button>
               <button className="btn btn-accent" onClick={() => setWatching(null)}>
-                Lukk
+                {t('common.close')}
               </button>
             </div>
           </div>
@@ -289,16 +287,16 @@ export function Replay({
 
       {deleting && (
         <Confirm
-          title="Slette dette klippet?"
-          body="Filen slettes fra disken."
-          confirmLabel="Slett"
+          title={t('replay.delete_confirm')}
+          body={t('replay.delete_body')}
+          confirmLabel={t('common.delete')}
           danger
           onCancel={() => setDeleting(null)}
           onConfirm={async () => {
             try {
               await api.deleteReplayClip(deleting.id);
             } catch (error) {
-              onToast('Klippet ble ikke slettet', String(error));
+              onToast(t('replay.delete_failed'), tr(error));
             }
             setDeleting(null);
             setWatching(null);

@@ -3,6 +3,7 @@ import type { Game } from '@gamehub/shared';
 import type { ActivitySummary, FreezeStatus, ReplayStatus } from '../api';
 import { GameCard } from '../components/GameCard';
 import { formatDuration, formatRelativeDay, formatSeconds } from '../format';
+import { t, tn } from '../i18n';
 import { Stat } from '../ui';
 
 /**
@@ -44,6 +45,7 @@ export function Home({
   const current = activity?.current ?? null;
   const favorites = useMemo(() => games.filter((g) => g.favorite).slice(0, 6), [games]);
   const frozenNow = freeze?.active?.state === 'frozen';
+  const sessions = activity?.today.sessionCount ?? 0;
 
   return (
     <div className="view">
@@ -52,22 +54,22 @@ export function Home({
           <div className="widget now-playing" style={{ gridColumn: 'span 2' }}>
             <h3>
               <span className={`pulse${frozenNow ? ' frozen' : ''}`} />
-              {frozenNow ? 'Frosset' : 'Spiller nå'}
+              {frozenNow ? t('home.frozen') : t('home.now_playing')}
             </h3>
             <p className="big" style={{ fontSize: 22 }}>
               {current.gameName}
             </p>
-            <p className="sub">{formatDuration(current.seconds)} denne økten</p>
+            <p className="sub">{t('home.this_session', { time: formatDuration(current.seconds) })}</p>
             <div className="row" style={{ marginTop: 12 }}>
               <button className="btn sm" onClick={() => onOpen(current.gameId)}>
-                Åpne spillet
+                {t('home.open_game')}
               </button>
               <button className={`btn sm${frozenNow ? ' btn-accent' : ''}`} onClick={onFreeze} disabled={!freeze?.supported}>
-                {frozenNow ? '▶ Fortsett' : '❄ Frys nå'}
+                {frozenNow ? t('home.resume') : t('home.freeze_now')}
               </button>
               {replay?.running && (
                 <button className="btn sm" onClick={onSaveClip}>
-                  ⏺ Lagre klipp
+                  {t('home.save_clip')}
                 </button>
               )}
             </div>
@@ -76,40 +78,33 @@ export function Home({
 
         <Stat
           index={1}
-          label="I dag"
+          label={t('home.today')}
           value={formatDuration(activity?.today.seconds ?? 0)}
-          sub={`${activity?.today.sessionCount ?? 0} ${activity?.today.sessionCount === 1 ? 'økt' : 'økter'}${
-            activity?.today.games[0] ? ` · mest ${activity.today.games[0][0]}` : ''
-          }`}
+          sub={`${tn('home.session', 'home.sessions', sessions)}${activity?.today.games[0] ? t('home.mostly', { name: activity.today.games[0][0] }) : ''}`}
         />
         <Stat
           index={2}
-          label="Streak"
+          label={t('home.streak')}
           value={
             <>
               <span className="flame">🔥</span> {activity?.streaks.current ?? 0}
             </>
           }
-          sub={`Lengste: ${activity?.streaks.longest ?? 0} dager`}
+          sub={t('home.longest', { n: activity?.streaks.longest ?? 0 })}
         />
-        <Stat
-          index={3}
-          label="Bibliotek"
-          value={games.length}
-          sub={`${games.filter((g) => g.installed).length} installert`}
-        />
+        <Stat index={3} label={t('home.library')} value={games.length} sub={t('home.installed_count', { n: games.filter((g) => g.installed).length })} />
         <button className="widget" style={{ textAlign: 'left', ['--i' as string]: 4 }} onClick={() => onGo('clips')}>
           <h3>
             <span className={`pulse${replay?.running ? ' rec' : ''}`} style={replay?.running ? {} : { animation: 'none', background: 'var(--ink-faint)' }} />
-            Replay
+            {t('home.replay')}
           </h3>
           <p className="big" style={{ fontSize: 22 }}>
-            {replay?.running ? 'Tar opp' : replay?.enabled ? 'Stoppet' : 'Av'}
+            {replay?.running ? t('home.replay_recording') : replay?.enabled ? t('home.replay_stopped') : t('home.replay_off')}
           </p>
           <p className="sub">
             {replay?.running
-              ? `${formatSeconds(replay.bufferedSeconds)} i bufferet${replay.audio.systemAudio ? ' · med lyd' : ''}`
-              : 'Klikk for å slå på'}
+              ? `${t('home.replay_buffer', { time: formatSeconds(replay.bufferedSeconds) })}${replay.audio.systemAudio ? t('home.replay_with_audio') : ''}`
+              : t('home.replay_click')}
           </p>
         </button>
         <Roulette games={games} onPlay={onPlay} onOpen={onOpen} />
@@ -117,7 +112,7 @@ export function Home({
 
       {recent.length > 0 && (
         <section style={{ marginBottom: 30 }}>
-          <h2 className="section-title">Nylig spilt</h2>
+          <h2 className="section-title">{t('home.recent')}</h2>
           <div className="grid">
             {recent.slice(0, 6).map(({ game, lastPlayed, seconds }, index) => (
               <GameCard
@@ -137,25 +132,16 @@ export function Home({
 
       {favorites.length > 0 && (
         <section>
-          <h2 className="section-title">Favoritter</h2>
+          <h2 className="section-title">{t('home.favorites')}</h2>
           <div className="grid">
             {favorites.map((game, index) => (
-              <GameCard
-                key={game.id}
-                index={index}
-                game={game}
-                running={running.includes(game.id)}
-                onOpen={() => onOpen(game.id)}
-                onPlay={() => onPlay(game)}
-              />
+              <GameCard key={game.id} index={index} game={game} running={running.includes(game.id)} onOpen={() => onOpen(game.id)} onPlay={() => onPlay(game)} />
             ))}
           </div>
         </section>
       )}
 
-      {games.length === 0 && (
-        <p className="empty">Ingen spill ennå. Installer noe i en launcher, så plukker GameHub det opp av seg selv.</p>
-      )}
+      {games.length === 0 && <p className="empty">{t('home.empty')}</p>}
     </div>
   );
 }
@@ -169,8 +155,6 @@ function Roulette({ games, onPlay, onOpen }: { games: Game[]; onPlay: (game: Gam
 
   const spin = () => {
     if (pool.length === 0) return setPicked(null);
-    // A short flicker through names before landing, because a roulette that
-    // just shows the answer is a lookup.
     setSpinning(true);
     let ticks = 0;
     const timer = window.setInterval(() => {
@@ -185,7 +169,7 @@ function Roulette({ games, onPlay, onOpen }: { games: Game[]; onPlay: (game: Gam
 
   return (
     <div className="widget" style={{ ['--i' as string]: 5 }}>
-      <h3>Hva skal jeg spille?</h3>
+      <h3>{t('home.roulette')}</h3>
       {picked ? (
         <>
           <p className="big" style={{ fontSize: 18, minHeight: 24 }}>
@@ -193,12 +177,12 @@ function Roulette({ games, onPlay, onOpen }: { games: Game[]; onPlay: (game: Gam
           </p>
           <div className="row" style={{ marginTop: 10 }}>
             <button className="btn sm btn-accent" onClick={() => onPlay(picked)} disabled={spinning}>
-              ▶ Spill
+              {t('common.play')}
             </button>
             <button className="btn sm" onClick={() => onOpen(picked.id)} disabled={spinning}>
-              Detaljer
+              {t('common.details')}
             </button>
-            <button className="btn sm icon" onClick={spin} aria-label="Trekk igjen" disabled={spinning}>
+            <button className="btn sm icon" onClick={spin} aria-label={t('home.roulette_again')} disabled={spinning}>
               🎲
             </button>
           </div>
@@ -206,16 +190,15 @@ function Roulette({ games, onPlay, onOpen }: { games: Game[]; onPlay: (game: Gam
       ) : (
         <>
           <p className="sub" style={{ marginBottom: 10 }}>
-            {pool.length} installerte spill å velge blant.
+            {t('home.roulette_pool', { n: pool.length })}
           </p>
           <button className="btn sm btn-accent" style={{ width: '100%' }} onClick={spin} disabled={pool.length === 0}>
-            🎲 Trekk et spill
+            {t('home.roulette_spin')}
           </button>
         </>
       )}
       <label style={{ display: 'flex', gap: 6, marginTop: 10, fontSize: 12, color: 'var(--ink-dim)', cursor: 'pointer' }}>
-        <input type="checkbox" checked={onlyUnplayed} onChange={(e) => setOnlyUnplayed(e.target.checked)} /> Bare spill jeg
-        aldri har startet
+        <input type="checkbox" checked={onlyUnplayed} onChange={(e) => setOnlyUnplayed(e.target.checked)} /> {t('home.roulette_unplayed')}
       </label>
     </div>
   );

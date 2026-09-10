@@ -4,8 +4,9 @@ import { revealItemInDir } from '@tauri-apps/plugin-opener';
 import { api, events, type Screenshot } from '../api';
 import { formatRelativeDay } from '../format';
 import { Confirm, PageHead } from '../ui';
+import { t, tr } from '../i18n';
 
-export function Screenshots({ onToast }: { onToast: (title: string, body?: string) => void }) {
+export function Screenshots({ onToast, hotkey }: { onToast: (title: string, body?: string) => void; hotkey: string }) {
   const [groups, setGroups] = useState<[string, Screenshot[]][]>([]);
   const [game, setGame] = useState('all');
   const [onlyFavorites, setOnlyFavorites] = useState(false);
@@ -29,38 +30,38 @@ export function Screenshots({ onToast }: { onToast: (title: string, body?: strin
 
   return (
     <div className="view">
-      <PageHead title="Screenshots" blurb={`${total} bilder, sortert under spillet som kjørte. F9 tar et nytt mens du spiller.`}>
+      <PageHead title={t('shots.title')} blurb={t('shots.blurb', { n: total, key: hotkey })}>
         <button
           className="btn btn-accent"
           onClick={async () => {
             try {
               const shot = await api.takeScreenshot();
-              onToast('Screenshot lagret', shot.gameName);
+              onToast(t('toast.screenshot_saved'), shot.gameName);
               load();
             } catch (error) {
-              onToast('Screenshot mislyktes', String(error));
+              onToast(t('toast.screenshot_failed'), tr(error));
             }
           }}
         >
-          ⎙ Ta screenshot nå
+          {t('shots.take')}
         </button>
         <button className="btn" onClick={async () => void revealItemInDir(await api.screenshotFolder())}>
-          Åpne mappen
+          {t('common.open_folder')}
         </button>
       </PageHead>
 
       <div className="filters">
-        <button className="chip" aria-pressed={game === 'all'} onClick={() => setGame('all')}>Alle</button>
+        <button className="chip" aria-pressed={game === 'all'} onClick={() => setGame('all')}>{t('common.all')}</button>
         {groups.map(([name, shots]) => (
           <button key={name} className="chip" aria-pressed={game === name} onClick={() => setGame(name)}>
             {name} <span style={{ opacity: 0.7 }}>{shots.length}</span>
           </button>
         ))}
-        <button className="chip" aria-pressed={onlyFavorites} onClick={() => setOnlyFavorites((v) => !v)}>★ Favoritter</button>
+        <button className="chip" aria-pressed={onlyFavorites} onClick={() => setOnlyFavorites((v) => !v)}>{t('shots.favorites')}</button>
       </div>
 
       {total === 0 ? (
-        <p className="empty">Ingen screenshots ennå. Trykk F9 mens du spiller, så havner bildet automatisk under riktig spill.</p>
+        <p className="empty">{t('shots.empty', { key: hotkey })}</p>
       ) : (
         shown.map(([name, shots]) => (
           <section key={name} style={{ marginBottom: 28 }}>
@@ -68,12 +69,12 @@ export function Screenshots({ onToast }: { onToast: (title: string, body?: strin
             <div className="shots">
               {shots.map((shot, index) => (
                 <figure key={shot.id} className="shot" style={{ ['--i' as string]: index }}>
-                  <button onClick={() => setViewing(shot)} aria-label={`Åpne ${shot.gameName}`}>
+                  <button onClick={() => setViewing(shot)} aria-label={t('shots.open', { name: shot.gameName })}>
                     <img src={convertFileSrc(shot.path)} alt="" loading="lazy" />
                   </button>
                   <figcaption>
                     <span className="name">{formatRelativeDay(shot.takenAt)}</span>
-                    <button className="shot-star" aria-label={shot.favorite ? 'Fjern favoritt' : 'Marker som favoritt'} onClick={async () => { await api.setScreenshotFavorite(shot.id, !shot.favorite); load(); }}>
+                    <button className="shot-star" aria-label={shot.favorite ? t('replay.unfavorite') : t('replay.favorite')} onClick={async () => { await api.setScreenshotFavorite(shot.id, !shot.favorite); load(); }}>
                       {shot.favorite ? '★' : '☆'}
                     </button>
                   </figcaption>
@@ -89,15 +90,15 @@ export function Screenshots({ onToast }: { onToast: (title: string, body?: strin
           <div className="viewer" onClick={(e) => e.stopPropagation()}>
             <img src={convertFileSrc(viewing.path)} alt="" />
             <div className="dialog-actions">
-              <button className="btn" onClick={() => void revealItemInDir(viewing.path)}>Vis i mappe</button>
-              <button className="btn btn-danger" onClick={() => setDeleting(viewing)}>Slett</button>
-              <button className="btn btn-accent" onClick={() => setViewing(null)}>Lukk</button>
+              <button className="btn" onClick={() => void revealItemInDir(viewing.path)}>{t('common.show_in_folder')}</button>
+              <button className="btn btn-danger" onClick={() => setDeleting(viewing)}>{t('common.delete')}</button>
+              <button className="btn btn-accent" onClick={() => setViewing(null)}>{t('common.close')}</button>
             </div>
           </div>
         </div>
       )}
       {deleting && (
-        <Confirm title="Slette dette bildet?" confirmLabel="Slett" danger onCancel={() => setDeleting(null)} onConfirm={async () => { await api.deleteScreenshot(deleting.id); setDeleting(null); setViewing(null); load(); }} />
+        <Confirm title={t('shots.delete_confirm')} confirmLabel={t('common.delete')} danger onCancel={() => setDeleting(null)} onConfirm={async () => { await api.deleteScreenshot(deleting.id); setDeleting(null); setViewing(null); load(); }} />
       )}
     </div>
   );

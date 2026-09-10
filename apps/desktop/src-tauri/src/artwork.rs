@@ -246,36 +246,36 @@ fn sniff_image(bytes: &[u8]) -> Option<&'static str> {
 /// actually an image by signature. The web view never gets filesystem access —
 /// it gets one data URL for one file it asked for.
 pub fn read_for_crop(path: &Path) -> Result<String, String> {
-    let meta = std::fs::metadata(path).map_err(|e| format!("That file could not be opened: {e}"))?;
+    let meta = std::fs::metadata(path).map_err(|e| crate::msg::code("file_open", &[&e.to_string()]))?;
     if !meta.is_file() {
-        return Err("That is not a file.".into());
+        return Err(crate::msg::plain("image_not_file"));
     }
     if meta.len() > MAX_SOURCE_BYTES {
-        return Err("That image is larger than 24 MB. Pick a smaller one.".into());
+        return Err(crate::msg::plain("image_too_large"));
     }
 
-    let bytes = std::fs::read(path).map_err(|e| format!("That file could not be read: {e}"))?;
-    let mime = sniff_image(&bytes).ok_or("That file is not an image GameHub can read.")?;
+    let bytes = std::fs::read(path).map_err(|e| crate::msg::code("file_read", &[&e.to_string()]))?;
+    let mime = sniff_image(&bytes).ok_or_else(|| crate::msg::plain("image_unreadable"))?;
     Ok(format!("data:{mime};base64,{}", base64_encode(&bytes)))
 }
 
 /// Stores a cropped cover for one game and returns the path it was written to.
 pub fn save_custom_cover(cache: &Path, game_id: &str, png: &[u8]) -> Result<PathBuf, String> {
     if png.len() > MAX_COVER_BYTES {
-        return Err("That cover is too large to store.".into());
+        return Err(crate::msg::plain("cover_too_large"));
     }
     if sniff_image(png) != Some("image/png") {
-        return Err("A cover must be a PNG.".into());
+        return Err(crate::msg::plain("cover_not_png"));
     }
 
-    std::fs::create_dir_all(cache).map_err(|e| format!("The artwork folder could not be created: {e}"))?;
+    std::fs::create_dir_all(cache).map_err(|e| crate::msg::code("artwork_folder", &[&e.to_string()]))?;
 
     // A game id looks like "steam:440", and a colon is not legal in a Windows
     // file name, so it is reduced to something that always is.
     let file_name = format!("{}_custom.png", safe_stem(game_id));
     let target = gamehub_detect::safepath::join_within(cache, &file_name)
         .map_err(|e| e.to_string())?;
-    std::fs::write(&target, png).map_err(|e| format!("The cover could not be saved: {e}"))?;
+    std::fs::write(&target, png).map_err(|e| crate::msg::code("cover_save", &[&e.to_string()]))?;
     Ok(target)
 }
 
@@ -324,7 +324,7 @@ pub fn base64_decode(value: &str) -> Result<Vec<u8>, String> {
             b'+' => 62,
             b'/' => 63,
             b'=' | b'\n' | b'\r' => continue,
-            _ => return Err("The image data was malformed.".into()),
+            _ => return Err(crate::msg::plain("image_malformed")),
         } as u32;
         buffer = (buffer << 6) | index;
         bits += 6;

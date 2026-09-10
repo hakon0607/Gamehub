@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { api, type PerformanceSample } from '../api';
 import { formatBytes } from '../format';
 import { PageHead, Stat } from '../ui';
+import { t } from '../i18n';
 
 function History({ values, max }: { values: number[]; max: number }) {
   if (values.length < 2) return null;
@@ -44,29 +45,29 @@ export function Performance({ currentGame }: { currentGame: string | null }) {
     };
   }, []);
 
-  if (!sample) return <p className="empty">Leser systemet …</p>;
+  if (!sample) return <p className="empty">{t('perf.reading')}</p>;
   const memPercent = (sample.memoryUsedBytes / Math.max(1, sample.memoryTotalBytes)) * 100;
 
   return (
     <div className="view">
-      <PageHead title="Ytelse" blurb="Ekte tall fra Windows. Bilder per sekund og GPU-temperatur vises ikke — GameHub viser heller ingenting enn et tall som ikke stemmer." />
+      <PageHead title={t('perf.title')} blurb={t('perf.blurb')} />
       <div className="widgets">
-        <Stat index={0} label="Prosessor" value={`${sample.cpuPercent.toFixed(0)} %`} sub={`${sample.cpuName} · ${sample.cpuCores} kjerner`}>
+        <Stat index={0} label={t('perf.cpu')} value={`${sample.cpuPercent.toFixed(0)} %`} sub={t('perf.cores', { name: sample.cpuName, n: sample.cpuCores })}>
           <History values={cpuHistory.current} max={100} />
         </Stat>
-        <Stat index={1} label="Minne" value={`${memPercent.toFixed(0)} %`} sub={`${formatBytes(sample.memoryUsedBytes)} av ${formatBytes(sample.memoryTotalBytes)}`}>
+        <Stat index={1} label={t('perf.memory')} value={`${memPercent.toFixed(0)} %`} sub={t('perf.of', { used: formatBytes(sample.memoryUsedBytes), total: formatBytes(sample.memoryTotalBytes) })}>
           <History values={memHistory.current} max={100} />
         </Stat>
-        <Stat index={2} label="Nettverk" value={<span style={{ fontSize: 20 }}>↓ {formatBytes(sample.networkDownBytes)}</span>} sub={`↑ ${formatBytes(sample.networkUpBytes)} siden oppstart`} />
+        <Stat index={2} label={t('perf.network')} value={<span style={{ fontSize: 20 }}>↓ {formatBytes(sample.networkDownBytes)}</span>} sub={t('perf.since_boot', { up: formatBytes(sample.networkUpBytes) })} />
         {sample.disks.slice(0, 3).map((disk, i) => (
-          <Stat key={disk.name} index={3 + i} label={`Disk ${disk.name}`} value={`${((disk.usedBytes / Math.max(1, disk.totalBytes)) * 100).toFixed(0)} %`} sub={`${formatBytes(disk.usedBytes)} av ${formatBytes(disk.totalBytes)} brukt`} />
+          <Stat key={disk.name} index={3 + i} label={t('perf.disk', { name: disk.name })} value={`${((disk.usedBytes / Math.max(1, disk.totalBytes)) * 100).toFixed(0)} %`} sub={t('perf.used', { used: formatBytes(disk.usedBytes), total: formatBytes(disk.totalBytes) })} />
         ))}
       </div>
       {currentGame && (
         <>
           <h2 className="section-title">{currentGame}</h2>
           {sample.gameProcesses.length === 0 ? (
-            <p className="note" style={{ marginBottom: 20 }}>Spillet kjører, men prosessene ligger utenfor mappen GameHub kjenner til.</p>
+            <p className="note" style={{ marginBottom: 20 }}>{t('perf.outside')}</p>
           ) : (
             <div className="facts" style={{ maxWidth: 460, marginBottom: 24 }}>
               {sample.gameProcesses.map((p) => (
@@ -76,7 +77,7 @@ export function Performance({ currentGame }: { currentGame: string | null }) {
           )}
         </>
       )}
-      <p className="note">{sample.unavailableNote} Vil du ha FPS og temperaturer, gjør MSI Afterburner med RivaTuner eller Nvidias eget overlegg den jobben ordentlig.</p>
+      <p className="note">{t('perf.tools').trim()}</p>
     </div>
   );
 }

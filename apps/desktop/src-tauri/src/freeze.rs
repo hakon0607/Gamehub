@@ -126,24 +126,23 @@ mod platform {
 
     fn call(pid: u32, name: &[u8], verb: &str) -> Result<(), String> {
         let Some(function) = ntdll_function(name) else {
-            return Err(format!("Windows tilbyr ikke {verb} av prosesser på denne maskinen."));
+            let _ = verb;
+            return Err(crate::msg::plain("nt_missing"));
         };
         unsafe {
             let handle = OpenProcess(PROCESS_SUSPEND_RESUME, 0, pid);
             if handle.is_null() {
                 let code = GetLastError();
                 return Err(match code {
-                    5 => format!(
-                        "Windows nektet tilgang til prosess {pid}. Spill med anti-juks (EasyAntiCheat, BattlEye, Vanguard) beskytter prosessene sine — de kan ikke fryses."
-                    ),
-                    87 => format!("Prosess {pid} finnes ikke lenger."),
-                    other => format!("Prosess {pid} kunne ikke åpnes (feil {other})."),
+                    5 => crate::msg::code("freeze_denied", &[&pid.to_string()]),
+                    87 => crate::msg::code("process_gone", &[&pid.to_string()]),
+                    other => crate::msg::code("process_open", &[&pid.to_string(), &other.to_string()]),
                 });
             }
             let status = function(handle);
             CloseHandle(handle);
             if status < 0 {
-                return Err(format!("{verb} av prosess {pid} mislyktes (NTSTATUS {status:#x})."));
+                return Err(crate::msg::code("nt_failed", &[&pid.to_string(), &format!("{status:#x}")]));
             }
         }
         Ok(())
@@ -168,11 +167,11 @@ mod platform {
     // unsupported rather than faked with SIGSTOP, which would behave
     // differently enough to mislead a test.
     pub fn suspend(_pid: u32) -> Result<(), String> {
-        Err("Frysing av spill er bare tilgjengelig på Windows.".into())
+        Err(crate::msg::plain("freeze_windows_only"))
     }
 
     pub fn resume(_pid: u32) -> Result<(), String> {
-        Err("Frysing av spill er bare tilgjengelig på Windows.".into())
+        Err(crate::msg::plain("freeze_windows_only"))
     }
 
     pub fn supported() -> bool {
@@ -212,6 +211,6 @@ mod tests {
     fn suspending_off_windows_says_so_instead_of_pretending() {
         assert!(!supported());
         let error = suspend_all(&[std::process::id()]).unwrap_err();
-        assert!(error.contains("Windows"));
+        assert_eq!(error, "@freeze_windows_only", "a message code the interface translates");
     }
 }

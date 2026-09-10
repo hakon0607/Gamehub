@@ -48,10 +48,10 @@ fn handle(app: &AppHandle, action: Action) {
                 let state = app.state::<Arc<AppState>>().inner().clone();
                 match crate::commands::capture_screenshot(&app, &state) {
                     Ok(shot) => {
-                        let _ = app.emit("toast", ("Screenshot lagret", shot.game_name));
+                        let _ = app.emit("toast", (crate::msg::plain("toast_shot_saved"), shot.game_name));
                     }
                     Err(error) => {
-                        let _ = app.emit("toast", ("Screenshot mislyktes", error));
+                        let _ = app.emit("toast", (crate::msg::plain("toast_shot_failed"), error));
                     }
                 }
             });
@@ -62,10 +62,10 @@ fn handle(app: &AppHandle, action: Action) {
                 let state = app.state::<Arc<AppState>>().inner().clone();
                 match crate::commands::save_replay_now(&app, &state, None) {
                     Ok(clip) => {
-                        let _ = app.emit("toast", ("Klipp lagret", clip.game_name));
+                        let _ = app.emit("toast", (crate::msg::plain("toast_clip_saved"), clip.game_name));
                     }
                     Err(error) => {
-                        let _ = app.emit("toast", ("Klippet ble ikke lagret", error));
+                        let _ = app.emit("toast", (crate::msg::plain("toast_clip_failed"), error));
                     }
                 }
             });
@@ -79,17 +79,13 @@ fn handle(app: &AppHandle, action: Action) {
                         let _ = app.emit(
                             "toast",
                             (
-                                if on { "Replay er på" } else { "Replay er av" },
-                                if on {
-                                    "Alt eldre enn bufferet slettes fortløpende."
-                                } else {
-                                    "Ingenting tas opp nå."
-                                },
+                                crate::msg::plain(if on { "toast_replay_on" } else { "toast_replay_off" }),
+                                crate::msg::plain(if on { "toast_replay_on_body" } else { "toast_replay_off_body" }),
                             ),
                         );
                     }
                     Err(error) => {
-                        let _ = app.emit("toast", ("Replay kunne ikke byttes", error));
+                        let _ = app.emit("toast", (crate::msg::plain("toast_replay_toggle_failed"), error));
                     }
                 }
             });
@@ -103,17 +99,13 @@ fn handle(app: &AppHandle, action: Action) {
                         let _ = app.emit(
                             "toast",
                             (
-                                if frozen { "Spillet er frosset" } else { "Spillet fortsetter" },
-                                if frozen {
-                                    format!("{name} står stille. Trykk samme tast for å fortsette.")
-                                } else {
-                                    name
-                                },
+                                crate::msg::plain(if frozen { "toast_frozen" } else { "toast_resumed" }),
+                                if frozen { crate::msg::code("toast_frozen_body", &[&name]) } else { name },
                             ),
                         );
                     }
                     Err(error) => {
-                        let _ = app.emit("toast", ("Kunne ikke fryse", error));
+                        let _ = app.emit("toast", (crate::msg::plain("toast_freeze_failed"), error));
                     }
                 }
             });

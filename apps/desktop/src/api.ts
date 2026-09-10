@@ -28,6 +28,8 @@ export interface Settings {
   ai: { enabled: boolean; provider: string; apiKey: string; model: string };
   cloud: { enabled: boolean; apiUrl: string };
   language: string;
+  /** False until the language screen has been answered once. */
+  languageChosen: boolean;
   theme: string;
   onboarded: boolean;
   dismissedUpdateVersion: string | null;
@@ -270,11 +272,22 @@ export interface ShortcutEntry {
 
 export type QuestPeriod = 'daily' | 'biweekly' | 'monthly';
 
+/** What a quest asks for; the interface puts it into words in its own language. */
+export type QuestGoal =
+  | { kind: 'playGame'; gameId: string; gameName: string; seconds: number }
+  | { kind: 'distinctGames'; count: number }
+  | { kind: 'playOnDays'; days: number }
+  | { kind: 'totalPlaytime'; seconds: number }
+  | { kind: 'revisit'; gameId: string; gameName: string; seconds: number }
+  | { kind: 'trySomethingNew'; seconds: number };
+
 export interface Quest {
   id: string;
   period: QuestPeriod;
+  /** English, from the generator. The interface uses `goal` instead. */
   title: string;
   description: string;
+  goal: QuestGoal;
   xp: number;
   progress: number;
   target: number;

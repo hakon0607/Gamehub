@@ -3,14 +3,15 @@ import { revealItemInDir } from '@tauri-apps/plugin-opener';
 import { api, type Backup, type DataFolders, type RecoveryNote } from '../api';
 import { Confirm, SettingGroup, SettingRow, useBusy } from '../ui';
 import { formatBytes, formatDateTime } from '../format';
+import { t, tr } from '../i18n';
 
 function describe(reason: string): string {
   if (reason.startsWith('update-from-')) {
     const from = reason.slice('update-from-'.length);
-    return from === 'unknown' ? 'Før en oppdatering' : `Før oppdatering fra ${from}`;
+    return from === 'unknown' ? t('data.before_update_unknown') : t('data.before_update', { from });
   }
-  if (reason === 'before-restore') return 'Før en gjenoppretting';
-  if (reason === 'manual') return 'Tatt av deg';
+  if (reason === 'before-restore') return t('data.before_restore');
+  if (reason === 'manual') return t('data.manual');
   return reason;
 }
 
@@ -33,10 +34,10 @@ export function DataSection({ onToast }: { onToast: (title: string, body?: strin
     run(async () => {
       try {
         const files = await api.restoreBackup(backup.id);
-        onToast('Dataene er hentet tilbake', `${files.length} filer`);
+        onToast(t('data.restored'), t('common.files', { n: files.length }));
         load();
       } catch (error) {
-        onToast('Gjenopprettingen mislyktes', String(error));
+        onToast(t('data.restore_failed'), tr(error));
       }
     });
 
@@ -44,48 +45,45 @@ export function DataSection({ onToast }: { onToast: (title: string, body?: strin
     <>
       {recoveries.length > 0 && (
         <div className="notice">
-          <strong>En fil måtte hentes fra sikkerhetskopi</strong>
+          <strong>{t('data.recovered_title')}</strong>
           {recoveries.map((note) => (
             <p key={note.file} style={{ margin: '4px 0 0' }}>
               {note.file}{' '}
-              {note.restored
-                ? 'kunne ikke leses, så den nyeste sikkerhetskopien ble lagt tilbake.'
-                : 'kunne ikke leses, og ingen sikkerhetskopi hadde en lesbar utgave.'}{' '}
-              Originalen er ikke slettet — den ligger som <code>{note.keptAt}</code>.
+              {note.restored ? t('data.recovered_restored') : t('data.recovered_none')} {t('data.original_kept')}{' '}
+              <code>{note.keptAt}</code>.
             </p>
           ))}
         </div>
       )}
 
-      <SettingGroup title="Mapper">
-        <SettingRow id="data-folders" title="Datamappen" description={<code>{folders.data}</code>}>
+      <SettingGroup title={t('data.g_folders')}>
+        <SettingRow id="data-folders" title={t('data.folder')} description={<code>{folders.data}</code>}>
           <button className="btn sm" onClick={() => void revealItemInDir(folders.data)}>
-            Åpne
+            {t('common.open')}
           </button>
         </SettingRow>
         <SettingRow
-          title="Sikkerhetskopier"
+          title={t('data.backups')}
           description={
             <>
               <code>{folders.backups}</code>
               <br />
-              Ligger med vilje utenfor datamappen: en oppdatering avinstallerer den gamle versjonen først, og da kan
-              Windows slette datamappen — kopiene blir stående.
+              {t('data.backups_hint')}
             </>
           }
           index={1}
         >
           <button className="btn sm" onClick={() => void revealItemInDir(folders.backups)}>
-            Åpne
+            {t('common.open')}
           </button>
         </SettingRow>
       </SettingGroup>
 
-      <SettingGroup title="Sikkerhetskopier">
+      <SettingGroup title={t('data.g_backups')}>
         <SettingRow
           id="backups"
-          title="Ta sikkerhetskopi nå"
-          description="Tas også automatisk før en ny versjon starter for første gang. De ti nyeste beholdes."
+          title={t('data.backup_now')}
+          description={t('data.backup_now_hint')}
         >
           <button
             className={`btn sm${busy ? ' busy' : ''}`}
@@ -94,20 +92,20 @@ export function DataSection({ onToast }: { onToast: (title: string, body?: strin
               run(async () => {
                 try {
                   const made = await api.backupNow();
-                  onToast(made ? 'Sikkerhetskopi tatt' : 'Ingenting å kopiere ennå', made ? `${made.files.length} filer` : undefined);
+                  onToast(made ? t('data.taken') : t('data.nothing'), made ? t('common.files', { n: made.files.length }) : undefined);
                   load();
                 } catch (error) {
-                  onToast('Sikkerhetskopien mislyktes', String(error));
+                  onToast(t('data.backup_failed'), tr(error));
                 }
               })
             }
           >
-            Ta kopi
+            {t('data.take')}
           </button>
         </SettingRow>
         {backups.length === 0 ? (
           <p className="note" style={{ padding: '10px 16px 14px' }}>
-            Ingen sikkerhetskopier ennå. Den første tas automatisk neste gang du oppdaterer.
+            {t('data.none')}
           </p>
         ) : (
           backups.map((backup) => (
@@ -115,12 +113,12 @@ export function DataSection({ onToast }: { onToast: (title: string, body?: strin
               <div className="backup-what">
                 <div>{describe(backup.reason)}</div>
                 <div className="backup-when">
-                  {formatDateTime(backup.takenAt)} · {backup.files.length} filer · {formatBytes(backup.bytes)}
+                  {t('data.meta', { when: formatDateTime(backup.takenAt), files: backup.files.length, size: formatBytes(backup.bytes) })}
                 </div>
               </div>
-              {backup.reason.startsWith('update-from') && <span className="badge-pill accent">Beholdes</span>}
+              {backup.reason.startsWith('update-from') && <span className="badge-pill accent">{t('data.kept')}</span>}
               <button className="btn sm" disabled={busy} onClick={() => setRestoring(backup)}>
-                Hent tilbake
+                {t('data.restore')}
               </button>
             </div>
           ))
@@ -129,9 +127,9 @@ export function DataSection({ onToast }: { onToast: (title: string, body?: strin
 
       {restoring && (
         <Confirm
-          title={`Hente tilbake dataene fra ${formatDateTime(restoring.takenAt)}?`}
-          body="Det du har nå blir sikkerhetskopiert først, så dette kan angres."
-          confirmLabel="Hent tilbake"
+          title={t('data.restore_confirm', { when: formatDateTime(restoring.takenAt) })}
+          body={t('data.restore_body')}
+          confirmLabel={t('data.restore')}
           onCancel={() => setRestoring(null)}
           onConfirm={() => {
             const backup = restoring;

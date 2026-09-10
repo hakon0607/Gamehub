@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { convertFileSrc } from '@tauri-apps/api/core';
 import { events, type Screenshot } from '../api';
+import { t } from '../i18n';
 
 /**
  * The screenshot you just took, shown in the app the moment it is saved — for
@@ -33,15 +34,15 @@ export function ShotPreview({ onOpen }: { onOpen: (shot: Screenshot) => void }) 
           onOpen(shot);
           setShot(null);
         }}
-        aria-label="Åpne bildet i full størrelse"
+        aria-label={t('shotpreview.open')}
       >
         <img src={convertFileSrc(shot.path)} alt="" />
       </button>
       <div className="shot-preview-text">
-        <strong>Screenshot lagret</strong>
+        <strong>{t('shotpreview.saved')}</strong>
         <span>{shot.gameName}</span>
       </div>
-      <button className="shot-preview-close" onClick={() => setShot(null)} aria-label="Lukk">
+      <button className="shot-preview-close" onClick={() => setShot(null)} aria-label={t('common.close')}>
         ×
       </button>
     </div>

@@ -18,6 +18,7 @@ import { Performance } from './views/Performance';
 import { Clipboard } from './views/Clipboard';
 import { SettingsView } from './views/Settings';
 import { Onboarding } from './views/Onboarding';
+import { LanguageChooser } from './views/LanguageChooser';
 import { UpdateDialog } from './components/UpdateDialog';
 import { Toasts, type Toast } from './components/Toasts';
 import { ShotPreview } from './components/ShotPreview';
@@ -25,6 +26,7 @@ import { Palette, type Command } from './Palette';
 import { useAppShortcuts } from './useAppShortcuts';
 import type { SettingsCategory } from './settingsIndex';
 import { formatDuration } from './format';
+import { currentLanguage, setLanguage, t, tr, type Key } from './i18n';
 
 export type View =
   | 'home'
@@ -40,40 +42,28 @@ export type View =
   | 'clipboard'
   | 'settings';
 
-const NAV: { title: string; items: { id: View; label: string; icon: string }[] }[] = [
-  {
-    title: 'Spill',
-    items: [
-      { id: 'home', label: 'Hjem', icon: '⌂' },
-      { id: 'library', label: 'Bibliotek', icon: '▦' },
-      { id: 'favorites', label: 'Favoritter', icon: '★' },
-    ],
-  },
-  {
-    title: 'Opptak',
-    items: [
-      { id: 'clips', label: 'Replay', icon: '⏺' },
-      { id: 'freezes', label: 'Frys spillet', icon: '❄' },
-      { id: 'screenshots', label: 'Screenshots', icon: '⎙' },
-    ],
-  },
-  {
-    title: 'Fremgang',
-    items: [
-      { id: 'quests', label: 'Quests', icon: '◆' },
-      { id: 'streaks', label: 'Streaks', icon: '🔥' },
-      { id: 'calendar', label: 'Kalender', icon: '▤' },
-    ],
-  },
-  {
-    title: 'Verktøy',
-    items: [
-      { id: 'performance', label: 'Ytelse', icon: '◔' },
-      { id: 'clipboard', label: 'Utklippstavle', icon: '⎘' },
-      { id: 'settings', label: 'Innstillinger', icon: '⚙' },
-    ],
-  },
+/** Sidebar groups. Labels are `nav.<id>` keys, so they follow the language. */
+const NAV: { title: Key; items: { id: View; icon: string }[] }[] = [
+  { title: 'nav.games', items: [{ id: 'home', icon: '⌂' }, { id: 'library', icon: '▦' }, { id: 'favorites', icon: '★' }] },
+  { title: 'nav.recording', items: [{ id: 'clips', icon: '⏺' }, { id: 'freezes', icon: '❄' }, { id: 'screenshots', icon: '⎙' }] },
+  { title: 'nav.progress', items: [{ id: 'quests', icon: '◆' }, { id: 'streaks', icon: '🔥' }, { id: 'calendar', icon: '▤' }] },
+  { title: 'nav.tools', items: [{ id: 'performance', icon: '◔' }, { id: 'clipboard', icon: '⎘' }, { id: 'settings', icon: '⚙' }] },
 ];
+
+const NAV_LABEL: Record<View, Key> = {
+  home: 'nav.home',
+  library: 'nav.library',
+  favorites: 'nav.favorites',
+  clips: 'nav.replay',
+  freezes: 'nav.freezes',
+  screenshots: 'nav.screenshots',
+  quests: 'nav.quests',
+  streaks: 'nav.streaks',
+  calendar: 'nav.calendar',
+  performance: 'nav.performance',
+  clipboard: 'nav.clipboard',
+  settings: 'nav.settings',
+};
 
 export function App() {
   const [games, setGames] = useState<Game[]>([]);
@@ -95,6 +85,8 @@ export function App() {
   const [palette, setPalette] = useState(false);
   const [settingsTarget, setSettingsTarget] = useState<{ category: SettingsCategory; id: string | null } | null>(null);
   const [shortcuts, setShortcuts] = useState<ShortcutEntry[]>([]);
+  // Bumped whenever the language changes, so the whole tree re-renders in it.
+  const [lang, setLang] = useState(currentLanguage());
 
   const toast = useCallback((title: string, body?: string) => {
     const id = `${Date.now()}-${Math.random()}`;
@@ -114,7 +106,11 @@ export function App() {
   useEffect(() => {
     refreshLibrary();
     void api.getRunningGames().then(setRunning);
-    void api.getSettings().then(setSettings);
+    void api.getSettings().then((s) => {
+      setLanguage(s.language);
+      setLang(currentLanguage());
+      setSettings(s);
+    });
     refreshActivity();
     refreshFreeze();
     refreshReplay();
@@ -133,7 +129,7 @@ export function App() {
         setScanning(false);
       }),
       events.onGamesDiscovered((discovered) => {
-        for (const game of discovered) toast(`${game.name} lagt til`, `Funnet i ${SOURCE_LABELS[game.source]}`);
+        for (const game of discovered) toast(t('toast.game_added', { name: game.name }), t('toast.found_in', { source: SOURCE_LABELS[game.source] }));
       }),
       events.onRunningGames((ids) => {
         setRunning(ids);
@@ -141,12 +137,15 @@ export function App() {
         refreshFreeze();
       }),
       events.onActivityUpdated(refreshActivity),
-      events.onToast((title, body) => toast(title, body)),
+      // Titles and bodies from the backend are keys; the body may be plain.
+      events.onToast((title, body) => toast(tr(title), tr(body))),
       events.onLibraryChanged(refreshLibrary),
       events.onArtworkUpdated(refreshLibrary),
       events.onFreezeChanged(refreshFreeze),
       events.onReplayState(refreshReplay),
       events.onSettingsUpdated((next) => {
+        setLanguage(next.language);
+        setLang(currentLanguage());
         setSettings(next);
         refreshReplay();
       }),
@@ -155,7 +154,7 @@ export function App() {
         setView('performance');
       }),
       events.onShortcutUnavailable((_, binding) =>
-        toast('Hurtigtasten er opptatt', `${binding} er allerede i bruk av et annet program. Velg en annen under Innstillinger → Hurtigtaster.`),
+        toast(t('toast.shortcut_taken'), t('toast.shortcut_taken_body', { binding })),
       ),
     ];
     return () => {
@@ -201,6 +200,8 @@ export function App() {
 
   const saveSettings = useCallback(async (next: Settings) => {
     const saved = await api.saveSettings(next);
+    setLanguage(saved.language);
+    setLang(currentLanguage());
     setSettings(saved);
   }, []);
 
@@ -231,9 +232,9 @@ export function App() {
     async (game: Game) => {
       try {
         await api.launchGame(game.id);
-        toast(`Starter ${game.name}`);
+        toast(t('toast.starting', { name: game.name }));
       } catch (error) {
-        toast('Spillet startet ikke', String(error));
+        toast(t('toast.launch_failed'), tr(error));
       }
     },
     [toast],
@@ -248,10 +249,10 @@ export function App() {
     async (gameId?: string) => {
       try {
         const point = await api.freezeNow(gameId);
-        toast('Spillet er frosset', `${point.gameName} står stille${point.saveCopy ? ' · lagringen er kopiert' : ''}.`);
+        toast(t('toast.frozen'), t('toast.frozen_body', { name: point.gameName, saved: point.saveCopy ? t('toast.frozen_saved') : '' }));
         refreshFreeze();
       } catch (error) {
-        toast('Kunne ikke fryse', String(error));
+        toast(t('toast.freeze_failed'), tr(error));
       }
     },
     [toast, refreshFreeze],
@@ -261,9 +262,9 @@ export function App() {
     async (id: string) => {
       try {
         const point = await api.resumeFreeze(id);
-        toast('Spillet fortsetter', point.gameName);
+        toast(t('toast.resumed'), point.gameName);
       } catch (error) {
-        toast('Kunne ikke fortsette', String(error));
+        toast(t('toast.resume_failed'), tr(error));
       }
       refreshFreeze();
     },
@@ -273,9 +274,9 @@ export function App() {
   const saveClip = useCallback(async () => {
     try {
       const clip = await api.saveReplay();
-      toast('Klipp lagret', `${clip.gameName}${clip.hasAudio ? ' · med lyd' : ''}`);
+      toast(t('toast.clip_saved'), `${clip.gameName}${clip.hasAudio ? t('toast.clip_with_audio') : ''}`);
     } catch (error) {
-      toast('Klippet ble ikke lagret', String(error));
+      toast(t('toast.clip_failed'), tr(error));
     }
   }, [toast]);
 
@@ -344,21 +345,33 @@ export function App() {
   const activeFreeze = freeze?.active?.state === 'frozen' ? freeze.active : null;
   const freezeHotkey = shortcuts.find((s) => s.action === 'freeze_game')?.binding || 'F7';
   const replayHotkey = shortcuts.find((s) => s.action === 'save_replay')?.binding || 'F8';
+  const screenshotHotkey = shortcuts.find((s) => s.action === 'screenshot')?.binding || 'F9';
+  const toggleReplayHotkey = shortcuts.find((s) => s.action === 'toggle_replay')?.binding || 'Ctrl+Shift+R';
 
   const paletteActions: Command[] = useMemo(
     () => [
-      { id: 'act-rescan', group: 'Handlinger', label: 'Se etter nye spill', icon: '↻', hint: 'F5', run: () => void rescanRef.current() },
-      { id: 'act-shot', group: 'Handlinger', label: 'Ta screenshot', icon: '⎙', run: () => void api.takeScreenshot().then((s) => toast('Screenshot lagret', s.gameName)).catch((e) => toast('Screenshot mislyktes', String(e))) },
-      ...(replay?.running ? [{ id: 'act-clip', group: 'Handlinger' as const, label: 'Lagre replay-klipp', icon: '⏺', hint: replayHotkey, run: () => void saveClip() }] : []),
+      { id: 'act-rescan', group: 'actions', label: t('palette.rescan'), icon: '↻', hint: 'F5', run: () => void rescanRef.current() },
+      { id: 'act-shot', group: 'actions', label: t('palette.screenshot'), icon: '⎙', hint: screenshotHotkey, run: () => void api.takeScreenshot().then((s) => toast(t('toast.screenshot_saved'), s.gameName)).catch((e) => toast(t('toast.screenshot_failed'), tr(e))) },
+      ...(replay?.running ? [{ id: 'act-clip', group: 'actions' as const, label: t('palette.clip'), icon: '⏺', hint: replayHotkey, run: () => void saveClip() }] : []),
       ...(activeFreeze
-        ? [{ id: 'act-resume', group: 'Handlinger' as const, label: `Fortsett ${activeFreeze.gameName}`, icon: '▶', hint: freezeHotkey, run: () => void resumeFreeze(activeFreeze.id) }]
+        ? [{ id: 'act-resume', group: 'actions' as const, label: t('palette.resume', { name: activeFreeze.gameName }), icon: '▶', hint: freezeHotkey, run: () => void resumeFreeze(activeFreeze.id) }]
         : freeze?.currentGameId
-          ? [{ id: 'act-freeze', group: 'Handlinger' as const, label: `Frys ${freeze.currentGameName} nå`, icon: '❄', hint: freezeHotkey, run: () => void freezeNow() }]
+          ? [{ id: 'act-freeze', group: 'actions' as const, label: t('palette.freeze', { name: freeze.currentGameName ?? '' }), icon: '❄', hint: freezeHotkey, run: () => void freezeNow() }]
           : []),
-      { id: 'act-replay', group: 'Handlinger', label: replay?.enabled ? 'Slå av replay' : 'Slå på replay', icon: '⏺', run: () => void api.setReplayEnabled(!replay?.enabled).then(refreshReplay).catch((e) => toast('Replay startet ikke', String(e))) },
+      { id: 'act-replay', group: 'actions', label: replay?.enabled ? t('palette.replay_off') : t('palette.replay_on'), icon: '⏺', run: () => void api.setReplayEnabled(!replay?.enabled).then(refreshReplay).catch((e) => toast(t('toast.replay_failed'), tr(e))) },
     ],
-    [replay, activeFreeze, freeze, toast, saveClip, resumeFreeze, freezeNow, refreshReplay, freezeHotkey, replayHotkey],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [replay, activeFreeze, freeze, toast, saveClip, resumeFreeze, freezeNow, refreshReplay, freezeHotkey, replayHotkey, screenshotHotkey, lang],
   );
+
+  if (settings && !settings.languageChosen) {
+    return (
+      <>
+        <div className="aurora"><i /><i /><i /></div>
+        <LanguageChooser initial="en" onDone={(code) => void saveSettings({ ...settings, language: code, languageChosen: true })} />
+      </>
+    );
+  }
 
   if (settings && !settings.onboarded) {
     return (
@@ -379,7 +392,7 @@ export function App() {
   const current = activity?.current ?? null;
 
   return (
-    <>
+    <div key={lang} style={{ display: 'contents' }}>
       <div className="aurora" aria-hidden="true">
         <i />
         <i />
@@ -392,7 +405,7 @@ export function App() {
           </div>
           {NAV.map((group) => (
             <div className="nav-group" key={group.title}>
-              <div className="nav-group-title">{group.title}</div>
+              <div className="nav-group-title">{t(group.title)}</div>
               {group.items.map((item) => {
                 const count = item.id === 'library' ? visible.length : item.id === 'favorites' ? visible.filter((g) => g.favorite).length : null;
                 return (
@@ -400,11 +413,11 @@ export function App() {
                     <span className="nav-icon" aria-hidden="true">
                       {item.icon}
                     </span>
-                    {item.label}
+                    {t(NAV_LABEL[item.id])}
                     {item.id === 'clips' && replay?.running ? (
-                      <span className="nav-dot rec" title="Tar opp" />
+                      <span className="nav-dot rec" title={t('nav.recording_now')} />
                     ) : item.id === 'freezes' && activeFreeze ? (
-                      <span className="nav-dot" style={{ background: 'var(--accent-2)' }} title="Et spill er frosset" />
+                      <span className="nav-dot" style={{ background: 'var(--accent-2)' }} title={t('nav.frozen_now')} />
                     ) : (
                       count !== null && count > 0 && <span className="nav-count">{count}</span>
                     )}
@@ -414,9 +427,9 @@ export function App() {
             </div>
           ))}
           <div className="sidebar-footer">
-            {launchers.filter((l) => l.detected).length} launchere · {visible.length} spill
+            {t('nav.footer', { launchers: launchers.filter((l) => l.detected).length, games: visible.length })}
             <br />
-            <span style={{ opacity: 0.7 }}>Ctrl+K for å søke i alt</span>
+            <span style={{ opacity: 0.7 }}>{t('nav.footer_hint')}</span>
           </div>
         </nav>
 
@@ -429,7 +442,7 @@ export function App() {
               <input
                 className="search"
                 ref={searchBox}
-                placeholder="Søk i spill …"
+                placeholder={t('top.search_games')}
                 value={search}
                 onChange={(e) => {
                   setSearch(e.target.value);
@@ -439,8 +452,8 @@ export function App() {
               />
               <kbd>Ctrl+F</kbd>
             </div>
-            <button className="btn btn-ghost" onClick={() => setPalette(true)} title="Finn spill, sider, innstillinger og handlinger">
-              Søk i alt <kbd className="key">Ctrl+K</kbd>
+            <button className="btn btn-ghost" onClick={() => setPalette(true)} title={t('top.search_all_title')}>
+              {t('top.search_all')} <kbd className="key">Ctrl+K</kbd>
             </button>
             <span style={{ flex: 1 }} />
             {current && (
@@ -450,24 +463,24 @@ export function App() {
                 <span style={{ color: 'var(--ink-faint)' }}>{formatDuration(current.seconds)}</span>
                 {activeFreeze ? (
                   <button className="btn sm btn-accent" onClick={() => void resumeFreeze(activeFreeze.id)}>
-                    ▶ Fortsett
+                    ▶ {t('top.resume')}
                   </button>
                 ) : (
                   freeze?.supported && (
-                    <button className="btn sm" onClick={() => void freezeNow()} title={`Frys spillet (${freezeHotkey})`}>
-                      ❄ Frys
+                    <button className="btn sm" onClick={() => void freezeNow()} title={t('top.freeze_title', { key: freezeHotkey })}>
+                      ❄ {t('top.freeze')}
                     </button>
                   )
                 )}
                 {replay?.running && (
-                  <button className="btn sm" onClick={() => void saveClip()} title={`Lagre klipp (${replayHotkey})`}>
-                    ⏺ Klipp
+                  <button className="btn sm" onClick={() => void saveClip()} title={t('top.clip_title', { key: replayHotkey })}>
+                    ⏺ {t('top.clip')}
                   </button>
                 )}
               </div>
             )}
             <button className={`btn${scanning ? ' busy' : ''}`} onClick={() => void rescan()} disabled={scanning}>
-              {scanning ? 'Skanner …' : '↻ Skann'}
+              {scanning ? t('top.scanning') : `↻ ${t('top.scan')}`}
             </button>
           </header>
 
@@ -486,18 +499,17 @@ export function App() {
                 onRemoved={(outcome) => {
                   setSelected(null);
                   refreshLibrary();
-                  toast(
-                    outcome === 'removed' ? 'Spillet er fjernet' : 'Spillet er skjult',
-                    outcome === 'hidden' ? 'Launcheren rapporterer det fortsatt, så det er skjult i stedet for slettet. Hent det tilbake fra biblioteket.' : undefined,
-                  );
+                  toast(outcome === 'removed' ? t('toast.game_removed') : t('toast.game_hidden'), outcome === 'hidden' ? t('toast.game_hidden_body') : undefined);
                 }}
                 onFreeze={() => void freezeNow(selectedGame.id)}
                 onResume={(id) => void resumeFreeze(id)}
                 onGoFreezes={() => go('freezes')}
                 onToast={toast}
+                freezeKey={freezeHotkey}
               />
             ) : view === 'clips' ? (
-              settings && <Replay settings={settings} onSettings={saveSettings} onToast={toast} onOpenSettings={() => openSetting('replay', null)} />
+
+              settings && <Replay settings={settings} onSettings={saveSettings} onToast={toast} onOpenSettings={() => openSetting('replay', null)} hotkey={replayHotkey} />
             ) : view === 'freezes' ? (
               <Freezes
                 status={freeze}
@@ -510,7 +522,7 @@ export function App() {
                 onToast={toast}
               />
             ) : view === 'screenshots' ? (
-              <Screenshots onToast={toast} />
+              <Screenshots onToast={toast} hotkey={screenshotHotkey} />
             ) : view === 'performance' ? (
               <Performance currentGame={current?.gameName ?? null} />
             ) : view === 'clipboard' ? (
@@ -533,6 +545,7 @@ export function App() {
                 onUpdateFound={setUpdate}
                 initialCategory={settingsTarget?.category}
                 focusSetting={settingsTarget?.id ?? null}
+                hotkeys={{ replay: replayHotkey, toggleReplay: toggleReplayHotkey, screenshot: screenshotHotkey }}
               />
             ) : view === 'home' ? (
               <Home
@@ -588,13 +601,13 @@ export function App() {
               if (settings && version) void saveSettings({ ...settings, dismissedUpdateVersion: version });
             }}
             onClose={() => setUpdate(null)}
-            onError={(message) => toast('Oppdateringen ble ikke installert', message)}
+            onError={(message) => toast(t('toast.update_failed'), message)}
           />
         )}
 
         <Toasts toasts={toasts} />
         <ShotPreview onOpen={() => go('screenshots')} />
       </div>
-    </>
+    </div>
   );
 }

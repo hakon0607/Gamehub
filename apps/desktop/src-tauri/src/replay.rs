@@ -647,7 +647,7 @@ impl Recorder {
     pub fn start(&mut self, ffmpeg: &Path, settings: &ReplaySettings) -> Result<(), String> {
         self.stop();
         std::fs::create_dir_all(&self.scratch)
-            .map_err(|e| format!("The replay buffer folder could not be created: {e}"))?;
+            .map_err(|e| crate::msg::code("buffer_folder", &[&e.to_string()]))?;
         // Old segments from a previous session would otherwise be stitched into
         // the first clip of this one.
         clear_scratch(&self.scratch);
@@ -699,7 +699,7 @@ impl Recorder {
             .stdout(std::process::Stdio::null())
             .stderr(std::process::Stdio::piped())
             .spawn()
-            .map_err(|e| format!("ffmpeg could not be started: {e}"))?;
+            .map_err(|e| crate::msg::code("ffmpeg_start", &[&e.to_string()]))?;
 
         // Whatever ffmpeg complains about is kept, so a recorder that dies can
         // say why. Without this the only symptom is an empty buffer minutes
@@ -738,9 +738,9 @@ impl Recorder {
             let last = why.lines().last().unwrap_or("").trim().to_string();
             self.system_audio = None;
             return Err(if last.is_empty() {
-                "Opptaket startet ikke, og ffmpeg sa ikke hvorfor.".to_string()
+                crate::msg::plain("replay_start_silent")
             } else {
-                format!("Opptaket startet ikke: {last}")
+                crate::msg::code("replay_start_failed", &[&last])
             });
         }
 
@@ -842,18 +842,15 @@ pub fn save_clip(
 ) -> Result<u64, String> {
     let segments = segments_for(scratch, seconds, std::time::SystemTime::now());
     if segments.is_empty() {
-        return Err(
-            "There is nothing in the buffer yet. Give it a few seconds after switching Replay on."
-                .into(),
-        );
+        return Err(crate::msg::plain("buffer_empty"));
     }
 
     let list_path = scratch.join("concat.txt");
     std::fs::write(&list_path, concat_list(&segments))
-        .map_err(|e| format!("The clip list could not be written: {e}"))?;
+        .map_err(|e| crate::msg::code("clip_list", &[&e.to_string()]))?;
 
     if let Some(parent) = destination.parent() {
-        std::fs::create_dir_all(parent).map_err(|e| format!("The clip folder could not be created: {e}"))?;
+        std::fs::create_dir_all(parent).map_err(|e| crate::msg::code("clip_folder", &[&e.to_string()]))?;
     }
 
     // How far into the stitched stream to start, so the clip is the last
@@ -895,15 +892,15 @@ pub fn save_clip(
 
     let output = command
         .output()
-        .map_err(|e| format!("ffmpeg could not be started: {e}"))?;
+        .map_err(|e| crate::msg::code("ffmpeg_start", &[&e.to_string()]))?;
     if !output.status.success() {
         let detail = String::from_utf8_lossy(&output.stderr);
-        return Err(format!("The clip could not be saved: {}", detail.lines().last().unwrap_or("unknown error")));
+        return Err(crate::msg::code("clip_save", &[detail.lines().last().unwrap_or("?")]));
     }
 
     std::fs::metadata(destination)
         .map(|m| m.len())
-        .map_err(|e| format!("The clip was not written: {e}"))
+        .map_err(|e| crate::msg::code("clip_not_written", &[&e.to_string()]))
 }
 
 
@@ -1299,7 +1296,7 @@ mod ffmpeg_tests {
         std::fs::create_dir_all(&scratch).unwrap();
 
         let error = save_clip(&ffmpeg, &scratch, &scratch.join("c.mp4"), 30).unwrap_err();
-        assert!(error.contains("nothing in the buffer"), "got: {error}");
+        assert_eq!(error, "@buffer_empty", "a message code the interface translates");
 
         let _ = std::fs::remove_dir_all(&scratch);
     }

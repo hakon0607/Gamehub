@@ -1,3 +1,5 @@
+import { t, type Key } from './i18n';
+
 /**
  * Every setting GameHub has, in one list.
  *
@@ -25,83 +27,98 @@ export type SettingsCategory =
 export interface SettingEntry {
   id: string;
   category: SettingsCategory;
+  /** The translated title, from the `si.*` keys. */
   title: string;
-  /** Words people might type, in Norwegian and English. */
+  /** Extra words people might type, in English — titles are searched in
+   * every language, so only synonyms need to live here. */
   keywords: string;
 }
 
-export const CATEGORIES: { id: SettingsCategory; label: string; icon: string; blurb: string }[] = [
-  { id: 'general', label: 'Generelt', icon: '⚙', blurb: 'Oppstart, systemkurv og hvor ofte GameHub ser etter nye spill.' },
-  { id: 'appearance', label: 'Utseende', icon: '◐', blurb: 'Tema, farge, tetthet, animasjoner og bakgrunnsbilde.' },
-  { id: 'replay', label: 'Replay', icon: '⏺', blurb: 'Bufferlengde, lyd, kvalitet og hva F8 lagrer.' },
-  { id: 'freeze', label: 'Frys spillet', icon: '❄', blurb: 'Hurtigtast, lagringsmapper og hvor frysepunktene havner.' },
-  { id: 'shortcuts', label: 'Hurtigtaster', icon: '⌨', blurb: 'Alle tastene, og hva de gjør. Alt kan bindes om.' },
-  { id: 'screenshots', label: 'Screenshots', icon: '⎙', blurb: 'Hvilken skjerm som fanges, og hvor bildene havner.' },
-  { id: 'folders', label: 'Spillmapper', icon: '▤', blurb: 'Ekstra mapper GameHub skal lete i etter spill.' },
-  { id: 'privacy', label: 'Personvern', icon: '◈', blurb: 'Hva som spores om spillingen din, og hvordan du sletter det.' },
-  { id: 'data', label: 'Dine data', icon: '⛁', blurb: 'Hvor alt ligger, sikkerhetskopier, og hvordan du henter dem tilbake.' },
-  { id: 'updates', label: 'Oppdateringer', icon: '↑', blurb: 'Versjonen du kjører, og automatiske oppdateringer.' },
-  { id: 'artwork', label: 'Coverbilder', icon: '▣', blurb: 'Hent manglende covere, og egne nøkler hvis du har dem.' },
-  { id: 'assistant', label: 'Assistent', icon: '✦', blurb: 'AI-hjelp i appen. Av som standard, og krever din egen nøkkel.' },
+export interface Category {
+  id: SettingsCategory;
+  label: string;
+  icon: string;
+  blurb: string;
+}
+
+const CATEGORY_LIST: { id: SettingsCategory; icon: string }[] = [
+  { id: 'general', icon: '⚙' },
+  { id: 'appearance', icon: '◐' },
+  { id: 'replay', icon: '⏺' },
+  { id: 'freeze', icon: '❄' },
+  { id: 'shortcuts', icon: '⌨' },
+  { id: 'screenshots', icon: '⎙' },
+  { id: 'folders', icon: '▤' },
+  { id: 'privacy', icon: '◈' },
+  { id: 'data', icon: '⛁' },
+  { id: 'updates', icon: '↑' },
+  { id: 'artwork', icon: '▣' },
+  { id: 'assistant', icon: '✦' },
 ];
 
-export const SETTINGS: SettingEntry[] = [
-  { id: 'start-with-windows', category: 'general', title: 'Start med Windows', keywords: 'oppstart autostart boot start windows' },
-  { id: 'minimise-to-tray', category: 'general', title: 'Fortsett i systemkurven når vinduet lukkes', keywords: 'tray systemkurv lukk minimer bakgrunn' },
-  { id: 'scan-interval', category: 'general', title: 'Se etter nye spill', keywords: 'skann scan intervall nye spill automatisk' },
-  { id: 'auto-add', category: 'general', title: 'Legg til nye spill automatisk', keywords: 'auto add nye spill oppdag' },
-  { id: 'language', category: 'general', title: 'Språk', keywords: 'språk language norsk engelsk' },
+/** The categories, in the current language. Called at render time. */
+export function categories(replayKey = 'F8'): Category[] {
+  return CATEGORY_LIST.map(({ id, icon }) => ({
+    id,
+    icon,
+    label: t(`settings.cat_${id}` as Key),
+    blurb: t(`settings.cat_${id}_blurb` as Key, { key: replayKey }),
+  }));
+}
 
-  { id: 'theme', category: 'appearance', title: 'Tema', keywords: 'tema theme farge mørk blå svart utseende' },
-  { id: 'accent', category: 'appearance', title: 'Aksentfarge', keywords: 'accent farge color' },
-  { id: 'density', category: 'appearance', title: 'Tetthet', keywords: 'kompakt tett spacing density' },
-  { id: 'background', category: 'appearance', title: 'Bakgrunnsbilde', keywords: 'bakgrunn bilde wallpaper background' },
-
-  { id: 'replay-enabled', category: 'replay', title: 'Replay på/av', keywords: 'replay opptak record buffer på av' },
-  { id: 'replay-buffer', category: 'replay', title: 'Hvor mye som huskes (bufferlengde)', keywords: 'buffer lengde minutter sekunder husk opptak 10 min' },
-  { id: 'replay-save', category: 'replay', title: 'Hvor mye F8 lagrer', keywords: 'f8 lagre klipp lengde sekunder' },
-  { id: 'replay-system-audio', category: 'replay', title: 'Ta opp spillyd (det du hører)', keywords: 'lyd audio sound system høyttaler spillyd loopback' },
-  { id: 'replay-mic', category: 'replay', title: 'Mikrofon', keywords: 'mikrofon mic lyd stemme' },
-  { id: 'replay-encoder', category: 'replay', title: 'Hvem koder videoen', keywords: 'encoder skjermkort gpu cpu nvenc ytelse' },
-  { id: 'replay-scale', category: 'replay', title: 'Oppløsning på opptaket', keywords: 'oppløsning 1080p 720p 1440p resolution' },
-  { id: 'replay-fps', category: 'replay', title: 'Bilder per sekund', keywords: 'fps 30 60 bilder' },
-  { id: 'replay-quality', category: 'replay', title: 'Kvalitet', keywords: 'kvalitet bitrate quality lav høy' },
-  { id: 'replay-folder', category: 'replay', title: 'Mappe for klipp og frysepunkter', keywords: 'mappe folder klipp lagres hvor' },
-
-  { id: 'freeze-hotkey', category: 'freeze', title: 'Hurtigtast for frys', keywords: 'frys freeze pause f7 hurtigtast cutscene' },
-  { id: 'freeze-saves', category: 'freeze', title: 'Lagringsmapper per spill', keywords: 'save lagring mappe savegame frys gjenopprett' },
-
-  { id: 'shortcuts', category: 'shortcuts', title: 'Alle hurtigtaster', keywords: 'hurtigtast tast shortcut hotkey keybind f8 f9 ctrl' },
-
-  { id: 'screenshot-monitor', category: 'screenshots', title: 'Skjerm som fanges', keywords: 'skjerm monitor display screenshot' },
-  { id: 'screenshot-folder', category: 'screenshots', title: 'Mappe for screenshots', keywords: 'mappe folder screenshot bilder' },
-
-  { id: 'extra-folders', category: 'folders', title: 'Ekstra spillmapper', keywords: 'mappe folder spill lokale exe legg til' },
-
-  { id: 'track-activity', category: 'privacy', title: 'Registrer spilletid, streaks og kalender', keywords: 'personvern privacy spilletid streak kalender spor' },
-  { id: 'streak-threshold', category: 'privacy', title: 'En dag teller etter', keywords: 'streak terskel minutter dag' },
-  { id: 'clipboard-enabled', category: 'privacy', title: 'Utklippshistorikk', keywords: 'utklipp clipboard historikk kopier' },
-  { id: 'clear-activity', category: 'privacy', title: 'Slett all aktivitet', keywords: 'slett tøm historikk aktivitet' },
-
-  { id: 'data-folders', category: 'data', title: 'Hvor dataene ligger', keywords: 'data mappe appdata backup sikkerhetskopi' },
-  { id: 'backups', category: 'data', title: 'Sikkerhetskopier', keywords: 'backup sikkerhetskopi gjenopprett restore' },
-
-  { id: 'check-updates', category: 'updates', title: 'Se etter oppdateringer', keywords: 'oppdatering update versjon ny' },
-  { id: 'refresh-artwork', category: 'artwork', title: 'Hent manglende coverbilder', keywords: 'cover bilde artwork steam hent' },
-  { id: 'artwork-keys', category: 'artwork', title: 'IGDB og SteamGridDB-nøkler', keywords: 'igdb steamgriddb nøkkel key api' },
-  { id: 'assistant', category: 'assistant', title: 'Assistent', keywords: 'ai assistent gemini openai groq nøkkel' },
+const ENTRIES: { id: string; category: SettingsCategory; keywords: string }[] = [
+  { id: 'start-with-windows', category: 'general', keywords: 'startup autostart boot login' },
+  { id: 'minimise-to-tray', category: 'general', keywords: 'tray close minimise background' },
+  { id: 'scan-interval', category: 'general', keywords: 'scan interval new games automatic' },
+  { id: 'auto-add', category: 'general', keywords: 'auto add new games discover' },
+  { id: 'language', category: 'general', keywords: 'language språk sprache langue idioma taal kieli język' },
+  { id: 'theme', category: 'appearance', keywords: 'theme colour dark blue black look' },
+  { id: 'accent', category: 'appearance', keywords: 'accent colour color' },
+  { id: 'density', category: 'appearance', keywords: 'compact spacing density' },
+  { id: 'background', category: 'appearance', keywords: 'background wallpaper image' },
+  { id: 'replay-enabled', category: 'replay', keywords: 'replay record buffer on off' },
+  { id: 'replay-buffer', category: 'replay', keywords: 'buffer length minutes seconds remember 10 min' },
+  { id: 'replay-save', category: 'replay', keywords: 'f8 save clip length seconds' },
+  { id: 'replay-system-audio', category: 'replay', keywords: 'sound audio speakers game sound loopback lyd' },
+  { id: 'replay-mic', category: 'replay', keywords: 'microphone mic voice' },
+  { id: 'replay-encoder', category: 'replay', keywords: 'encoder graphics card gpu cpu nvenc performance' },
+  { id: 'replay-scale', category: 'replay', keywords: 'resolution 1080p 720p 1440p' },
+  { id: 'replay-fps', category: 'replay', keywords: 'fps 30 60 frames' },
+  { id: 'replay-quality', category: 'replay', keywords: 'quality bitrate low high' },
+  { id: 'replay-folder', category: 'replay', keywords: 'folder clips where saved' },
+  { id: 'freeze-hotkey', category: 'freeze', keywords: 'freeze pause f7 hotkey cutscene' },
+  { id: 'freeze-saves', category: 'freeze', keywords: 'save folder savegame freeze restore' },
+  { id: 'shortcuts', category: 'shortcuts', keywords: 'shortcut key hotkey keybind f8 f9 ctrl' },
+  { id: 'screenshot-monitor', category: 'screenshots', keywords: 'screen monitor display screenshot' },
+  { id: 'screenshot-folder', category: 'screenshots', keywords: 'folder screenshot pictures' },
+  { id: 'extra-folders', category: 'folders', keywords: 'folder games local exe add' },
+  { id: 'track-activity', category: 'privacy', keywords: 'privacy playtime streak calendar track' },
+  { id: 'streak-threshold', category: 'privacy', keywords: 'streak threshold minutes day' },
+  { id: 'clipboard-enabled', category: 'privacy', keywords: 'clipboard history copy' },
+  { id: 'clear-activity', category: 'privacy', keywords: 'delete clear history activity' },
+  { id: 'data-folders', category: 'data', keywords: 'data folder appdata backup' },
+  { id: 'backups', category: 'data', keywords: 'backup restore' },
+  { id: 'check-updates', category: 'updates', keywords: 'update version new' },
+  { id: 'refresh-artwork', category: 'artwork', keywords: 'cover picture artwork steam fetch' },
+  { id: 'artwork-keys', category: 'artwork', keywords: 'igdb steamgriddb key api' },
+  { id: 'assistant', category: 'assistant', keywords: 'ai assistant gemini openai groq key' },
 ];
+
+/** Every setting, titled in the current language. */
+export function settingsEntries(): SettingEntry[] {
+  return ENTRIES.map((entry) => ({ ...entry, title: t(`si.${entry.id.replace(/-/g, '_')}` as Key) }));
+}
 
 export function searchSettings(query: string): SettingEntry[] {
   const q = query.trim().toLowerCase();
   if (!q) return [];
   const words = q.split(/\s+/);
-  return SETTINGS.filter((entry) => {
+  return settingsEntries().filter((entry) => {
     const haystack = `${entry.title} ${entry.keywords} ${labelOf(entry.category)}`.toLowerCase();
     return words.every((word) => haystack.includes(word));
   });
 }
 
 export function labelOf(category: SettingsCategory): string {
-  return CATEGORIES.find((c) => c.id === category)?.label ?? category;
+  return t(`settings.cat_${category}` as Key);
 }

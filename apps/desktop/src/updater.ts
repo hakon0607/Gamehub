@@ -10,6 +10,7 @@
 import { check, type Update } from '@tauri-apps/plugin-updater';
 import { relaunch } from '@tauri-apps/plugin-process';
 import { getVersion } from '@tauri-apps/api/app';
+import { t } from './i18n';
 
 export interface UpdateStatus {
   available: boolean;
@@ -26,18 +27,18 @@ export function describeUpdateError(error: unknown): string {
   const lower = text.toLowerCase();
 
   if (lower.includes('network') || lower.includes('dns') || lower.includes('connect') || lower.includes('timed out')) {
-    return 'GameHub kunne ikke nå oppdateringsserveren. Sjekk internettforbindelsen og prøv igjen.';
+    return t('update.err_network');
   }
   if (lower.includes('signature') || lower.includes('verify')) {
-    return 'Oppdateringen bestod ikke signatursjekken og ble ikke installert.';
+    return t('update.err_signature');
   }
   if (lower.includes('404') || lower.includes('not found')) {
-    return 'Fant ingen latest.json for denne versjonen ennå.';
+    return t('update.err_404');
   }
   if (lower.includes('endpoint') || lower.includes('config') || lower.includes('pubkey')) {
-    return 'Oppdateringer er ikke satt opp i denne bygget av GameHub.';
+    return t('update.err_config');
   }
-  return `Oppdateringssjekken feilet: ${text}`;
+  return t('update.err_other', { error: text });
 }
 
 /**

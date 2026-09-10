@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import { api, type ShortcutEntry } from '../api';
 import { SettingGroup } from '../ui';
+import { t, tr, type Key } from '../i18n';
+import en from '../i18n/en.json';
 
 /** Turns a keydown into the accelerator string Tauri expects. */
 function accelerator(event: KeyboardEvent): string | null {
@@ -16,33 +18,10 @@ function accelerator(event: KeyboardEvent): string | null {
   return parts.join('+');
 }
 
-/** Norwegian labels for the backend's action ids. */
-const LABELS: Record<string, string> = {
-  open_gamehub: 'Åpne GameHub',
-  quick_tools: 'Hurtigverktøy (over spillet)',
-  screenshot: 'Ta screenshot',
-  save_replay: 'Lagre replay-klipp',
-  toggle_replay: 'Replay på/av',
-  freeze_game: 'Frys spillet / fortsett',
-  toggle_overlay: 'Vis ytelse mens du spiller',
-  search: 'Søk',
-  library: 'Gå til Bibliotek',
-  quests: 'Gå til Quests',
-  performance: 'Gå til Ytelse',
-  rescan: 'Se etter nye spill',
-  screenshots: 'Gå til Screenshots',
-  clips: 'Gå til Replay',
-  freezes: 'Gå til Frysepunkter',
-  home: 'Gå til Hjem',
-  settings: 'Gå til Innstillinger',
-  favorites: 'Gå til Favoritter',
-  streaks: 'Gå til Streaks',
-  calendar: 'Gå til Kalender',
-  clipboard: 'Gå til Utklippstavle',
-};
-
+/** The action's label in the current language, from the `sc.*` keys. */
 export function shortcutLabel(entry: ShortcutEntry): string {
-  return LABELS[entry.action] ?? entry.label;
+  const key = `sc.${entry.action}` as Key;
+  return key in en ? t(key) : entry.label;
 }
 
 /**
@@ -81,7 +60,7 @@ export function ShortcutCenter({
         load();
         window.dispatchEvent(new Event('shortcuts-changed'));
       } catch (error) {
-        onToast('Hurtigtasten ble ikke satt', String(error));
+        onToast(t('sc.not_set'), tr(error));
       }
     };
     window.addEventListener('keydown', onKey, true);
@@ -95,12 +74,12 @@ export function ShortcutCenter({
   const row = (shortcut: ShortcutEntry) => (
     <div className="shortcut-row" key={shortcut.action}>
       <span className="label">{shortcutLabel(shortcut)}</span>
-      <span className="shortcut-scope">{shortcut.scope === 'global' ? 'Virker i spill' : 'I vinduet'}</span>
+      <span className="shortcut-scope">{shortcut.scope === 'global' ? t('sc.scope_global') : t('sc.scope_app')}</span>
       <button
         className={`keycap${listening === shortcut.action ? ' listening' : ''}`}
         onClick={() => setListening(shortcut.action)}
       >
-        {listening === shortcut.action ? 'Trykk …' : shortcut.binding || 'Ingen'}
+        {listening === shortcut.action ? t('sc.press') : shortcut.binding || t('sc.none')}
       </button>
       {shortcut.binding !== shortcut.defaultBinding && (
         <button
@@ -111,7 +90,7 @@ export function ShortcutCenter({
             window.dispatchEvent(new Event('shortcuts-changed'));
           }}
         >
-          Tilbakestill
+          {t('sc.reset')}
         </button>
       )}
     </div>
@@ -119,8 +98,8 @@ export function ShortcutCenter({
 
   return (
     <>
-      {global.length > 0 && <SettingGroup title="Globale — virker mens du spiller">{global.map(row)}</SettingGroup>}
-      {app.length > 0 && <SettingGroup title="Bare i GameHub-vinduet">{app.map(row)}</SettingGroup>}
+      {global.length > 0 && <SettingGroup title={t('sc.global')}>{global.map(row)}</SettingGroup>}
+      {app.length > 0 && <SettingGroup title={t('sc.app')}>{app.map(row)}</SettingGroup>}
     </>
   );
 }

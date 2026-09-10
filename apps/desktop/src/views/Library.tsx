@@ -5,6 +5,7 @@ import { open } from '@tauri-apps/plugin-dialog';
 import { GameCard } from '../components/GameCard';
 import { api } from '../api';
 import { PageHead, Segmented } from '../ui';
+import { locale, t, tr } from '../i18n';
 
 type Sort = 'name' | 'recent' | 'playtime' | 'added';
 
@@ -54,50 +55,50 @@ export function Library({
       case 'added':
         return list.sort((a, b) => time(b.discoveredAt) - time(a.discoveredAt));
       default:
-        return list.sort((a, b) => a.name.localeCompare(b.name, 'nb'));
+        return list.sort((a, b) => a.name.localeCompare(b.name, locale()));
     }
   }, [games, sort, installedOnly]);
 
   const addGame = async () => {
-    const picked = await open({ multiple: false, filters: [{ name: 'Program', extensions: ['exe'] }] });
+    const picked = await open({ multiple: false, filters: [{ name: t('library.pick_program'), extensions: ['exe'] }] });
     if (typeof picked !== 'string') return;
     try {
       const game = await api.addManualGame(picked);
       onLibraryChanged();
-      onToast(`${game.name} lagt til`, 'Du kan endre navn og cover på spillsiden.');
+      onToast(t('library.added', { name: game.name }), t('library.added_body'));
     } catch (error) {
-      onToast('Spillet ble ikke lagt til', String(error));
+      onToast(t('library.add_failed'), tr(error));
     }
   };
 
   return (
     <div className="view">
       <PageHead
-        title={favorites ? 'Favoritter' : 'Bibliotek'}
+        title={favorites ? t('library.favorites') : t('library.title')}
         blurb={
           search
-            ? `${sorted.length} treff på «${search}»`
-            : `${sorted.length} spill${source !== 'all' ? ` fra ${SOURCE_LABELS[source]}` : ''}`
+            ? t('library.hits', { n: sorted.length, q: search })
+            : `${t('library.count', { n: sorted.length })}${source !== 'all' ? t('library.from', { source: SOURCE_LABELS[source] }) : ''}`
         }
       >
         <Segmented
           value={sort}
           onChange={setSort}
           options={[
-            { value: 'name', label: 'Navn' },
-            { value: 'recent', label: 'Sist spilt' },
-            { value: 'playtime', label: 'Spilletid' },
-            { value: 'added', label: 'Nyest' },
+            { value: 'name', label: t('library.sort_name') },
+            { value: 'recent', label: t('library.sort_recent') },
+            { value: 'playtime', label: t('library.sort_playtime') },
+            { value: 'added', label: t('library.sort_added') },
           ]}
         />
         <button className="btn" onClick={() => void addGame()}>
-          + Legg til spill
+          {t('library.add_game')}
         </button>
       </PageHead>
 
       <div className="filters">
         <button className="chip" aria-pressed={source === 'all'} onClick={() => onSource('all')}>
-          Alle
+          {t('common.all')}
         </button>
         {GAME_SOURCES.filter((s) => (counts.get(s) ?? 0) > 0).map((s) => (
           <button key={s} className="chip" aria-pressed={source === s} onClick={() => onSource(s)}>
@@ -105,7 +106,7 @@ export function Library({
           </button>
         ))}
         <button className="chip" aria-pressed={installedOnly} onClick={() => setInstalledOnly((v) => !v)}>
-          Bare installerte
+          {t('library.installed_only')}
         </button>
         {hidden > 0 && (
           <button
@@ -113,19 +114,17 @@ export function Library({
             onClick={async () => {
               const restored = await api.restoreHidden();
               onLibraryChanged();
-              onToast(`${restored} spill hentet tilbake`);
+              onToast(t('library.restored', { n: restored }));
             }}
           >
-            Vis {hidden} skjulte
+            {t('library.show_hidden', { n: hidden })}
           </button>
         )}
       </div>
 
       {sorted.length === 0 ? (
         <p className="empty">
-          {favorites
-            ? 'Ingen favoritter ennå. Trykk ★ på et spill for å legge det her.'
-            : 'Ingenting her ennå. Installer et spill i en launcher så dukker det opp av seg selv — eller trykk «Legg til spill» og pek på en .exe.'}
+          {favorites ? t('library.empty_favorites') : t('library.empty')}
         </p>
       ) : (
         <div className="grid">

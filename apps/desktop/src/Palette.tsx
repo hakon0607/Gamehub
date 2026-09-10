@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Game } from '@gamehub/shared';
 import { SOURCE_LABELS } from '@gamehub/shared';
-import { CATEGORIES, searchSettings, type SettingsCategory } from './settingsIndex';
+import { categories, searchSettings, type SettingsCategory } from './settingsIndex';
+import { t } from './i18n';
 
 /**
  * The command palette: Ctrl+K anywhere.
@@ -12,7 +13,7 @@ import { CATEGORIES, searchSettings, type SettingsCategory } from './settingsInd
  */
 export interface Command {
   id: string;
-  group: 'Spill' | 'Sider' | 'Innstillinger' | 'Handlinger';
+  group: 'games' | 'pages' | 'settings' | 'actions';
   label: string;
   hint?: string;
   icon: string;
@@ -47,38 +48,39 @@ export function Palette({
   const commands = useMemo<Command[]>(() => {
     const q = query.trim().toLowerCase();
     const pageList: [string, string, string][] = [
-      ['home', 'Hjem', '⌂'],
-      ['library', 'Bibliotek', '▦'],
-      ['favorites', 'Favoritter', '★'],
-      ['clips', 'Replay', '⏺'],
-      ['freezes', 'Frys spillet', '❄'],
-      ['screenshots', 'Screenshots', '⎙'],
-      ['quests', 'Quests', '◆'],
-      ['streaks', 'Streaks', '🔥'],
-      ['calendar', 'Kalender', '▤'],
-      ['performance', 'Ytelse', '◔'],
-      ['clipboard', 'Utklippstavle', '⎘'],
-      ['settings', 'Innstillinger', '⚙'],
+      ['home', t('nav.home'), '⌂'],
+      ['library', t('nav.library'), '▦'],
+      ['favorites', t('nav.favorites'), '★'],
+      ['clips', t('nav.replay'), '⏺'],
+      ['freezes', t('nav.freezes'), '❄'],
+      ['screenshots', t('nav.screenshots'), '⎙'],
+      ['quests', t('nav.quests'), '◆'],
+      ['streaks', t('nav.streaks'), '🔥'],
+      ['calendar', t('nav.calendar'), '▤'],
+      ['performance', t('nav.performance'), '◔'],
+      ['clipboard', t('nav.clipboard'), '⎘'],
+      ['settings', t('nav.settings'), '⚙'],
     ];
-    const pages: Command[] = pageList.map(([id, label, icon]) => ({ id: `page-${id}`, group: 'Sider', label, icon, run: () => onGo(id) }));
+    const pages: Command[] = pageList.map(([id, label, icon]) => ({ id: `page-${id}`, group: 'pages', label, icon, run: () => onGo(id) }));
+    const cats = categories();
 
     const matchedGames: Command[] = games
       .filter((g) => !g.hidden && (!q || g.name.toLowerCase().includes(q) || g.tags.some((t) => t.toLowerCase().includes(q))))
       .slice(0, q ? 8 : 5)
       .map((game) => ({
         id: `game-${game.id}`,
-        group: 'Spill',
+        group: 'games',
         label: game.name,
-        hint: running.includes(game.id) ? 'kjører' : SOURCE_LABELS[game.source],
+        hint: running.includes(game.id) ? t('palette.running') : SOURCE_LABELS[game.source],
         icon: '▶',
         run: () => (running.includes(game.id) || !game.installed ? onOpenGame(game.id) : onPlay(game)),
       }));
 
     const settings: Command[] = (q ? searchSettings(q) : []).slice(0, 8).map((hit) => ({
       id: `setting-${hit.id}`,
-      group: 'Innstillinger',
+      group: 'settings',
       label: hit.title,
-      hint: CATEGORIES.find((c) => c.id === hit.category)?.label,
+      hint: cats.find((c) => c.id === hit.category)?.label,
       icon: '⚙',
       run: () => onSetting(hit.category, hit.id),
     }));
@@ -122,20 +124,20 @@ export function Palette({
         <input
           ref={input}
           className="palette-input"
-          placeholder="Søk etter spill, side, innstilling eller handling …"
+          placeholder={t('palette.placeholder')}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />
         <div className="palette-list">
           {commands.length === 0 ? (
-            <p className="palette-empty">Ingenting passer «{query}»</p>
+            <p className="palette-empty">{t('palette.empty', { q: query })}</p>
           ) : (
             commands.map((command, index) => {
               const header = command.group !== lastGroup ? command.group : null;
               lastGroup = command.group;
               return (
                 <div key={command.id}>
-                  {header && <div className="palette-group">{header}</div>}
+                  {header && <div className="palette-group">{t(`palette.g_${header}`)}</div>}
                   <button
                     className="palette-item"
                     aria-selected={index === selected}

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { t } from '../i18n';
 
 /** Library covers are 2:3, so the crop box is locked to that shape. */
 const ASPECT = 2 / 3;
@@ -144,12 +145,10 @@ export function CoverCropper({
   const pct = (value: number) => `${(value * 100).toFixed(3)}%`;
 
   return (
-    <div className="scrim" role="dialog" aria-modal="true" aria-label={`Choose a cover for ${gameName}`}>
+    <div className="scrim" role="dialog" aria-modal="true" aria-label={t('cropper.title', { name: gameName })}>
       <div className="dialog" style={{ width: 'min(620px, calc(100vw - 48px))' }}>
-        <h2>Crop the cover</h2>
-        <p className="version-note">
-          Drag the box to choose what to keep. Covers are 2:3, so the box stays that shape.
-        </p>
+        <h2>{t('cropper.title', { name: gameName })}</h2>
+        <p className="version-note">{t('cropper.hint')}</p>
 
         <div className="cropper" ref={frameRef}>
           {image && <img src={dataUrl} alt="" draggable={false} />}
@@ -188,10 +187,10 @@ export function CoverCropper({
 
         <div className="dialog-actions" style={{ marginTop: 18 }}>
           <button className="btn" onClick={onCancel} disabled={saving}>
-            Cancel
+            {t('common.cancel')}
           </button>
           <button className="btn btn-accent" onClick={save} disabled={!image || saving}>
-            {saving ? 'Saving…' : 'Use this cover'}
+            {saving ? t('common.loading') : t('cropper.save')}
           </button>
         </div>
       </div>

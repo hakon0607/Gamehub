@@ -21,13 +21,10 @@ pub enum LaunchError {
 impl std::fmt::Display for LaunchError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            LaunchError::NotInstalled => write!(f, "That game is not installed on this PC."),
-            LaunchError::NoMethod => write!(
-                f,
-                "GameHub does not know how to start this one. Open its launcher once, then rescan."
-            ),
-            LaunchError::Rejected(why) => write!(f, "{why}"),
-            LaunchError::Failed(why) => write!(f, "Windows refused to start it: {why}"),
+            LaunchError::NotInstalled => write!(f, "{}", crate::msg::plain("launch_not_installed")),
+            LaunchError::NoMethod => write!(f, "{}", crate::msg::plain("launch_no_method")),
+            LaunchError::Rejected(why) => write!(f, "{}", crate::msg::code("launch_rejected", &[why])),
+            LaunchError::Failed(why) => write!(f, "{}", crate::msg::code("launch_failed", &[why])),
         }
     }
 }
@@ -64,7 +61,7 @@ pub fn launch(game: &Game) -> Result<(), LaunchError> {
                 .map_err(|e| LaunchError::Rejected(e.to_string()))?;
             for arg in args {
                 if arg.contains('\0') || arg.contains('\n') {
-                    return Err(LaunchError::Rejected("launch arguments contain control characters".into()));
+                    return Err(LaunchError::Rejected(crate::msg::plain("launch_control_chars")));
                 }
             }
             spawn(&exe, args, working_dir.as_deref())
@@ -74,9 +71,7 @@ pub fn launch(game: &Game) -> Result<(), LaunchError> {
                 .chars()
                 .all(|c| c.is_ascii_alphanumeric() || "._-!".contains(c))
             {
-                return Err(LaunchError::Rejected(
-                    "that Store app id contains characters GameHub will not pass to the shell".into(),
-                ));
+                return Err(LaunchError::Rejected(crate::msg::plain("launch_bad_store_id")));
             }
             open_uri(&format!("shell:AppsFolder\\{app_user_model_id}"))
         }
@@ -123,7 +118,7 @@ fn open_uri(uri: &str) -> Result<(), LaunchError> {
     // GameHub is a Windows application. This exists so the crate builds and is
     // testable elsewhere, and deliberately does nothing.
     let _ = uri;
-    Err(LaunchError::Failed("launching is only implemented on Windows".into()))
+    Err(LaunchError::Failed(crate::msg::plain("launch_windows_only")))
 }
 
 #[cfg(windows)]
@@ -142,7 +137,7 @@ fn spawn(exe: &Path, args: &[String], working_dir: Option<&str>) -> Result<(), L
 #[cfg(not(windows))]
 fn spawn(exe: &Path, args: &[String], working_dir: Option<&str>) -> Result<(), LaunchError> {
     let _ = (exe, args, working_dir);
-    Err(LaunchError::Failed("launching is only implemented on Windows".into()))
+    Err(LaunchError::Failed(crate::msg::plain("launch_windows_only")))
 }
 
 #[cfg(test)]

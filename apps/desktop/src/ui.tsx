@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
+import { t } from './i18n';
 
 /**
  * The handful of controls every page is built from.
@@ -222,7 +223,7 @@ export function Modal({
 export function Confirm({
   title,
   body,
-  confirmLabel = 'Ja',
+  confirmLabel,
   danger,
   onConfirm,
   onCancel,
@@ -241,10 +242,10 @@ export function Confirm({
       actions={
         <>
           <button className="btn" onClick={onCancel}>
-            Avbryt
+            {t('common.cancel')}
           </button>
           <button className={`btn ${danger ? 'btn-danger' : 'btn-accent'}`} onClick={onConfirm} autoFocus>
-            {confirmLabel}
+            {confirmLabel ?? t('common.yes')}
           </button>
         </>
       }
@@ -280,5 +281,5 @@ export function Kbd({ children }: { children: ReactNode }) {
 }
 
 export function Spinner() {
-  return <span className="btn busy btn-ghost" style={{ pointerEvents: 'none' }} aria-label="Laster" />;
+  return <span className="btn busy btn-ghost" style={{ pointerEvents: 'none' }} aria-label={t('common.loading')} />;
 }
