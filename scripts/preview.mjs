@@ -85,7 +85,7 @@ const settings = {
   streakThresholdMinutes: 15, screenshotFolder: '', screenshotMonitor: 0, clipboardEnabled: true, accent: '', density: 'comfortable',
   backgroundImage: '', replay: { enabled: true, bufferSeconds: 120, fps: 60, quality: 'medium', monitor: 0, systemAudio: true, audioDevice: '', folder: '', scaleHeight: 1080, saveSeconds: 30, encoder: 'auto' },
   extraGameFolders: ['D:\\Spill'], metadata: { igdbClientId: '', igdbClientSecret: '', steamGridDbKey: '' }, ai: { enabled: false, provider: 'gemini', apiKey: '', model: '' },
-  cloud: { enabled: false, apiUrl: '' }, language: 'nb', theme: 'nattbla', onboarded: true, dismissedUpdateVersion: null,
+  cloud: { enabled: false, apiUrl: '' }, language: 'en', languageChosen: false, theme: 'nattbla', onboarded: true, dismissedUpdateVersion: null,
 };
 
 const now = new Date().toISOString();
@@ -108,12 +108,12 @@ const answers = {
     trackingEnabled: true,
   }),
   get_quests: () => ({
-    daily: [{ id: 'q1', period: 'daily', title: 'Spill i 30 minutter', description: 'Hva som helst teller.', xp: 200, progress: 1200, target: 1800, complete: false }],
+    daily: [{ id: 'q1', period: 'daily', title: 'Spill i 30 minutter', description: 'Hva som helst teller.', goal: { kind: 'totalPlaytime', seconds: 1800 }, xp: 200, progress: 1200, target: 1800, complete: false }],
     biweekly: [
-      { id: 'q2', period: 'biweekly', title: 'Tilbake til Cyberpunk 2077', description: 'Ikke rørt på en måned.', xp: 500, progress: 1, target: 1, complete: true },
-      { id: 'q3', period: 'biweekly', title: 'Tre ulike spill', description: 'Spill tre forskjellige spill.', xp: 500, progress: 2, target: 3, complete: false },
+      { id: 'q2', period: 'biweekly', title: 'Tilbake til Cyberpunk 2077', description: 'Ikke rørt på en måned.', goal: { kind: 'revisit', gameId: 'steam:2', gameName: 'Cyberpunk 2077', seconds: 1800 }, xp: 500, progress: 1, target: 1, complete: true },
+      { id: 'q3', period: 'biweekly', title: 'Tre ulike spill', description: 'Spill tre forskjellige spill.', goal: { kind: 'distinctGames', count: 3 }, xp: 500, progress: 2, target: 3, complete: false },
     ],
-    monthly: [{ id: 'q4', period: 'monthly', title: 'Ti timer i Elden Ring', description: 'Favoritten din.', xp: 1000, progress: 21_600, target: 36_000, complete: false }],
+    monthly: [{ id: 'q4', period: 'monthly', title: 'Ti timer i Elden Ring', description: 'Favoritten din.', goal: { kind: 'playGame', gameId: 'steam:1', gameName: 'Elden Ring', seconds: 36000 }, xp: 1000, progress: 21_600, target: 36_000, complete: false }],
     xp: 12_400, level: 2, xpIntoLevel: 2_400, xpForLevel: 10_000,
   }),
   get_calendar_month: (a) => [3, 4, 7, 8, 9].map((d) => ({ date: `${a.month}-${String(d).padStart(2, '0')}`, seconds: 1800 * d, games: [['Elden Ring', 1200 * d], ['Fortnite', 600 * d]], sessionCount: 2 })),
@@ -170,16 +170,23 @@ await page.addInitScript(`
   const frame = ${frame.toString()};
   for (const [k, src] of Object.entries(window.__ANSWERS_SRC__)) window.__ANSWERS__[k] = eval('(' + src + ')');
 `);
-page.on('pageerror', (e) => console.error('page error:', e.message));
+page.on('pageerror', (e) => console.error('page error:', e.message, e.stack?.split('\n').slice(0,3).join(' / ')));
 await page.goto(`http://localhost:${port}/`);
-await page.waitForSelector('.sidebar');
-await page.waitForTimeout(900);
 
 const shoot = async (name) => {
   await page.waitForTimeout(700);
   await page.screenshot({ path: join(out, `${name}.png`) });
   console.log(`  ${name}.png`);
 };
+
+// First start: the language screen, English preselected. Norwegian is
+// chosen here so the rest of the tour reads as before.
+await page.waitForSelector('.onboarding');
+await shoot('00-language');
+await page.click('.theme-card:has-text("Norsk")');
+await page.click('.btn-accent.big');
+await page.waitForSelector('.sidebar');
+await page.waitForTimeout(900);
 
 await shoot('01-home');
 const nav = async (label) => {
@@ -218,6 +225,17 @@ await shoot('14-streaks');
 await nav('Utklippstavle');
 await shoot('15-clipboard');
 
+// The same app in three other languages — the words all change, nothing else.
+for (const [code, home, settingsLabel] of [['de', 'Start', 'Einstellungen'], ['es', 'Inicio', 'Ajustes'], ['pl', 'Start', 'Ustawienia']]) {
+  await page.addInitScript(`window.__ANSWERS__.get_settings = () => ({ ...${JSON.stringify(settings)}, language: ${JSON.stringify(code)}, languageChosen: true });`);
+  await page.reload();
+  await page.waitForSelector('.sidebar');
+  await page.waitForTimeout(900);
+  await shoot(`20-home-${code}`);
+  await page.click(`.nav-item:has-text("${settingsLabel}")`);
+  await shoot(`21-settings-${code}`);
+  void home;
+}
 await browser.close();
 server.close();
 console.log(`\nscreenshots in ${out}`);
