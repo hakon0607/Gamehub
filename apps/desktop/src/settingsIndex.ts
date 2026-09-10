@@ -72,6 +72,8 @@ const ENTRIES: { id: string; category: SettingsCategory; keywords: string }[] = 
   { id: 'scan-interval', category: 'general', keywords: 'scan interval new games automatic' },
   { id: 'auto-add', category: 'general', keywords: 'auto add new games discover' },
   { id: 'language', category: 'general', keywords: 'language språk sprache langue idioma taal kieli język' },
+  { id: 'overlay-popup', category: 'general', keywords: 'popup overlay notification toast game hidden fullscreen varsel' },
+  { id: 'overlay-sound', category: 'general', keywords: 'sound pling beep notification lyd' },
   { id: 'theme', category: 'appearance', keywords: 'theme colour dark blue black look' },
   { id: 'accent', category: 'appearance', keywords: 'accent colour color' },
   { id: 'density', category: 'appearance', keywords: 'compact spacing density' },

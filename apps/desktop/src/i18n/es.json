@@ -779,5 +779,13 @@
   "be.shortcut_one_key": "Un atajo necesita exactamente una tecla además de los modificadores.",
   "be.shortcut_needs_modifier": "Añade Ctrl, Alt o Mayús — una sola letra se dispararía mientras escribes.",
   "be.shot_gone": "Esa captura no está en la biblioteca.",
-  "be.shot_outside": "Ese archivo está fuera de la carpeta de capturas, así que no se borró."
+  "be.shot_outside": "Ese archivo está fuera de la carpeta de capturas, así que no se borró.",
+  "settings.g_popup": "Aviso sobre el juego",
+  "settings.overlay_popup": "Aviso sobre el juego",
+  "settings.overlay_popup_hint": "Cuando GameHub está oculto, una tarjeta pequeña abajo a la derecha dice lo que acaba de hacer un atajo: captura guardada, clip guardado, juego congelado.",
+  "settings.overlay_sound": "Reproducir un sonido",
+  "settings.overlay_sound_hint": "Un pling corto con el aviso, para oírlo aunque no estés mirando.",
+  "settings.popup_note": "Los juegos en pantalla completa exclusiva tapan todas las ventanas, incluido este aviso. Pon el juego en ventana sin bordes (lo predeterminado en la mayoría) y se verá.",
+  "si.overlay_popup": "Aviso sobre el juego",
+  "si.overlay_sound": "Sonido del aviso"
 }

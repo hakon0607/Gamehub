@@ -193,6 +193,11 @@ export function SettingsView({
               ))}
               {row('auto-add', t('settings.auto_add'), t('settings.auto_add_hint'), <Toggle checked={draft.autoAddNewGames} onChange={(v) => void save({ ...draft, autoAddNewGames: v })} />, 1)}
             </SettingGroup>
+            <SettingGroup title={t('settings.g_popup')}>
+              {row('overlay-popup', t('settings.overlay_popup'), t('settings.overlay_popup_hint'), <Toggle checked={draft.overlayPopup} onChange={(v) => void save({ ...draft, overlayPopup: v })} />)}
+              {row('overlay-sound', t('settings.overlay_sound'), t('settings.overlay_sound_hint'), <Toggle checked={draft.overlaySound} onChange={(v) => void save({ ...draft, overlaySound: v })} />, 1)}
+            </SettingGroup>
+            <p className="note">{t('settings.popup_note')}</p>
           </>
         )}
 

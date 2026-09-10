@@ -30,6 +30,8 @@ export interface Settings {
   language: string;
   /** False until the language screen has been answered once. */
   languageChosen: boolean;
+  overlayPopup: boolean;
+  overlaySound: boolean;
   theme: string;
   onboarded: boolean;
   dismissedUpdateVersion: string | null;

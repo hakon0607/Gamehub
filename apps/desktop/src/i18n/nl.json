@@ -779,5 +779,13 @@
   "be.shortcut_one_key": "Een sneltoets heeft precies één toets nodig naast de modifiers.",
   "be.shortcut_needs_modifier": "Voeg Ctrl, Alt of Shift toe — een losse letter zou afgaan terwijl je typt.",
   "be.shot_gone": "Die screenshot staat niet in de bibliotheek.",
-  "be.shot_outside": "Dat bestand ligt buiten de screenshotmap, dus is het niet verwijderd."
+  "be.shot_outside": "Dat bestand ligt buiten de screenshotmap, dus is het niet verwijderd.",
+  "settings.g_popup": "Pop-up over de game",
+  "settings.overlay_popup": "Pop-up over de game",
+  "settings.overlay_popup_hint": "Als GameHub verborgen is, zegt een klein kaartje rechtsonder wat een sneltoets net deed: screenshot opgeslagen, clip opgeslagen, game bevroren.",
+  "settings.overlay_sound": "Geluid afspelen",
+  "settings.overlay_sound_hint": "Een korte pling bij de pop-up, zodat je het hoort ook als je niet kijkt.",
+  "settings.popup_note": "Games in exclusief volledig scherm bedekken elk venster, deze pop-up ook. Zet de game op randloos venster (de standaard in de meeste games) en hij verschijnt.",
+  "si.overlay_popup": "Pop-up over de game",
+  "si.overlay_sound": "Pop-upgeluid"
 }

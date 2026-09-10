@@ -779,5 +779,13 @@
   "be.shortcut_one_key": "Ein Kürzel braucht genau eine Taste neben den Modifikatoren.",
   "be.shortcut_needs_modifier": "Füge Strg, Alt oder Umschalt hinzu — ein einzelner Buchstabe würde beim Tippen auslösen.",
   "be.shot_gone": "Dieser Screenshot ist nicht in der Bibliothek.",
-  "be.shot_outside": "Diese Datei liegt außerhalb des Screenshot-Ordners und wurde deshalb nicht gelöscht."
+  "be.shot_outside": "Diese Datei liegt außerhalb des Screenshot-Ordners und wurde deshalb nicht gelöscht.",
+  "settings.g_popup": "Popup über dem Spiel",
+  "settings.overlay_popup": "Popup über dem Spiel",
+  "settings.overlay_popup_hint": "Wenn GameHub versteckt ist, sagt eine kleine Karte unten rechts, was ein Kürzel gerade getan hat: Screenshot gespeichert, Clip gespeichert, Spiel eingefroren.",
+  "settings.overlay_sound": "Ton abspielen",
+  "settings.overlay_sound_hint": "Ein kurzes Pling zum Popup, damit du es auch hörst, wenn du nicht hinschaust.",
+  "settings.popup_note": "Spiele im exklusiven Vollbild verdecken jedes Fenster, auch dieses Popup. Stelle das Spiel auf randloses Fenster (in den meisten Spielen die Voreinstellung), dann erscheint es.",
+  "si.overlay_popup": "Popup über dem Spiel",
+  "si.overlay_sound": "Popup-Ton"
 }

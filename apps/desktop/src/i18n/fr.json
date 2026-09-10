@@ -779,5 +779,13 @@
   "be.shortcut_one_key": "Un raccourci a besoin d'exactement une touche en plus des modificateurs.",
   "be.shortcut_needs_modifier": "Ajoute Ctrl, Alt ou Maj — une lettre seule se déclencherait pendant que tu tapes.",
   "be.shot_gone": "Cette capture d'écran n'est pas dans la bibliothèque.",
-  "be.shot_outside": "Ce fichier est en dehors du dossier des captures, il n'a donc pas été supprimé."
+  "be.shot_outside": "Ce fichier est en dehors du dossier des captures, il n'a donc pas été supprimé.",
+  "settings.g_popup": "Popup par-dessus le jeu",
+  "settings.overlay_popup": "Popup par-dessus le jeu",
+  "settings.overlay_popup_hint": "Quand GameHub est masqué, une petite carte en bas à droite dit ce qu'un raccourci vient de faire : capture enregistrée, clip enregistré, jeu figé.",
+  "settings.overlay_sound": "Jouer un son",
+  "settings.overlay_sound_hint": "Un petit pling avec la popup, pour l'entendre même sans regarder.",
+  "settings.popup_note": "Les jeux en plein écran exclusif couvrent toutes les fenêtres, cette popup comprise. Mets le jeu en fenêtré sans bordure (le réglage par défaut de la plupart des jeux) et elle s'affiche.",
+  "si.overlay_popup": "Popup par-dessus le jeu",
+  "si.overlay_sound": "Son de la popup"
 }

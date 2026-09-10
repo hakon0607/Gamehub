@@ -779,5 +779,13 @@
   "be.shortcut_one_key": "En genväg behöver exakt en tangent utöver modifierarna.",
   "be.shortcut_needs_modifier": "Lägg till Ctrl, Alt eller Shift — en ensam bokstav skulle utlösas medan du skriver.",
   "be.shot_gone": "Den skärmbilden finns inte i biblioteket.",
-  "be.shot_outside": "Den filen ligger utanför skärmbildsmappen, så den raderades inte."
+  "be.shot_outside": "Den filen ligger utanför skärmbildsmappen, så den raderades inte.",
+  "settings.g_popup": "Popup över spelet",
+  "settings.overlay_popup": "Popup över spelet",
+  "settings.overlay_popup_hint": "När GameHub är dolt visar ett litet kort nere till höger vad ett kortkommando just gjorde: skärmbild sparad, klipp sparat, spelet fryst.",
+  "settings.overlay_sound": "Spela ett ljud",
+  "settings.overlay_sound_hint": "Ett kort pling tillsammans med popupen, så du hör det även när du inte tittar.",
+  "settings.popup_note": "Spel i exklusiv helskärm täcker alla fönster, även den här popupen. Ställ in spelet på kantlöst fönster (standard i de flesta spel) så visas den.",
+  "si.overlay_popup": "Popup över spelet",
+  "si.overlay_sound": "Popup-ljud"
 }

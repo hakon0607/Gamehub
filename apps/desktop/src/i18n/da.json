@@ -779,5 +779,13 @@
   "be.shortcut_one_key": "En genvej skal have præcis én tast ud over modifikationstasterne.",
   "be.shortcut_needs_modifier": "Tilføj Ctrl, Alt eller Shift — et enkelt bogstav ville blive udløst, mens du skriver.",
   "be.shot_gone": "Det skærmbillede er ikke i biblioteket.",
-  "be.shot_outside": "Den fil ligger uden for skærmbilledmappen, så den blev ikke slettet."
+  "be.shot_outside": "Den fil ligger uden for skærmbilledmappen, så den blev ikke slettet.",
+  "settings.g_popup": "Popup over spillet",
+  "settings.overlay_popup": "Popup over spillet",
+  "settings.overlay_popup_hint": "Når GameHub er skjult, viser et lille kort nederst til højre, hvad en genvej lige gjorde: skærmbillede gemt, klip gemt, spillet frosset.",
+  "settings.overlay_sound": "Afspil en lyd",
+  "settings.overlay_sound_hint": "Et kort pling sammen med popuppen, så du hører det, selvom du ikke kigger.",
+  "settings.popup_note": "Spil i eksklusiv fuldskærm dækker alle vinduer, også denne popup. Sæt spillet til rammeløst vindue (standard i de fleste spil), så vises den.",
+  "si.overlay_popup": "Popup over spillet",
+  "si.overlay_sound": "Popup-lyd"
 }

@@ -779,5 +779,13 @@
   "be.shortcut_one_key": "A shortcut needs exactly one key besides the modifiers.",
   "be.shortcut_needs_modifier": "Add Ctrl, Alt or Shift — a single letter would fire while you were typing.",
   "be.shot_gone": "That screenshot is not in the library.",
-  "be.shot_outside": "That file is outside the screenshot folder, so it was not deleted."
+  "be.shot_outside": "That file is outside the screenshot folder, so it was not deleted.",
+  "settings.g_popup": "Popup over the game",
+  "settings.overlay_popup": "Popup over the game",
+  "settings.overlay_popup_hint": "When GameHub is hidden, a small card in the bottom-right corner says what a shortcut just did: screenshot saved, clip saved, game frozen.",
+  "settings.overlay_sound": "Play a sound",
+  "settings.overlay_sound_hint": "A short pling with the popup, so you hear it even when you are not looking.",
+  "settings.popup_note": "Games in exclusive fullscreen cover every window, this popup included. Set the game to borderless windowed (the default in most games) and it shows.",
+  "si.overlay_popup": "Popup over the game",
+  "si.overlay_sound": "Popup sound"
 }

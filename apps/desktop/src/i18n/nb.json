@@ -779,5 +779,13 @@
   "be.shortcut_one_key": "En snarvei trenger nøyaktig én tast i tillegg til modifikatorene.",
   "be.shortcut_needs_modifier": "Legg til Ctrl, Alt eller Shift — en enkelt bokstav ville utløst mens du skriver.",
   "be.shot_gone": "Det skjermbildet er ikke i biblioteket.",
-  "be.shot_outside": "Den filen ligger utenfor skjermbildemappen, så den ble ikke slettet."
+  "be.shot_outside": "Den filen ligger utenfor skjermbildemappen, så den ble ikke slettet.",
+  "settings.g_popup": "Popup over spillet",
+  "settings.overlay_popup": "Popup over spillet",
+  "settings.overlay_popup_hint": "Når GameHub er skjult, viser et lite kort nede til høyre hva en hurtigtast nettopp gjorde: screenshot lagret, klipp lagret, spillet frosset.",
+  "settings.overlay_sound": "Spill av en lyd",
+  "settings.overlay_sound_hint": "Et lite pling sammen med popupen, så du hører det selv om du ikke ser.",
+  "settings.popup_note": "Spill i eksklusiv fullskjerm dekker alle vinduer, også denne popupen. Sett spillet til kantløst vindu (standard i de fleste spill), så vises den.",
+  "si.overlay_popup": "Popup over spillet",
+  "si.overlay_sound": "Popup-lyd"
 }

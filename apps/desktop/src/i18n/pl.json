@@ -779,5 +779,13 @@
   "be.shortcut_one_key": "Skrót potrzebuje dokładnie jednego klawisza oprócz modyfikatorów.",
   "be.shortcut_needs_modifier": "Dodaj Ctrl, Alt lub Shift — pojedyncza litera uruchamiałaby się podczas pisania.",
   "be.shot_gone": "Tego zrzutu ekranu nie ma w bibliotece.",
-  "be.shot_outside": "Ten plik leży poza folderem zrzutów ekranu, więc nie został usunięty."
+  "be.shot_outside": "Ten plik leży poza folderem zrzutów ekranu, więc nie został usunięty.",
+  "settings.g_popup": "Popup nad grą",
+  "settings.overlay_popup": "Popup nad grą",
+  "settings.overlay_popup_hint": "Gdy GameHub jest ukryty, mała karta w prawym dolnym rogu mówi, co właśnie zrobił skrót: zrzut zapisany, klip zapisany, gra zamrożona.",
+  "settings.overlay_sound": "Odtwórz dźwięk",
+  "settings.overlay_sound_hint": "Krótkie pling razem z popupem, żebyś usłyszał nawet nie patrząc.",
+  "settings.popup_note": "Gry w wyłącznym trybie pełnoekranowym zasłaniają wszystkie okna, także ten popup. Ustaw grę w oknie bez ramek (domyślnie w większości gier), a będzie widoczny.",
+  "si.overlay_popup": "Popup nad grą",
+  "si.overlay_sound": "Dźwięk popupu"
 }

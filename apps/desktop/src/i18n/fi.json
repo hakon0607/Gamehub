@@ -779,5 +779,13 @@
   "be.shortcut_one_key": "Pikanäppäin tarvitsee täsmälleen yhden näppäimen muunnosnäppäinten lisäksi.",
   "be.shortcut_needs_modifier": "Lisää Ctrl, Alt tai Shift — yksittäinen kirjain laukeaisi kirjoittaessasi.",
   "be.shot_gone": "Tuo kuvakaappaus ei ole kirjastossa.",
-  "be.shot_outside": "Tuo tiedosto on kuvakaappauskansion ulkopuolella, joten sitä ei poistettu."
+  "be.shot_outside": "Tuo tiedosto on kuvakaappauskansion ulkopuolella, joten sitä ei poistettu.",
+  "settings.g_popup": "Ponnahdus pelin päälle",
+  "settings.overlay_popup": "Ponnahdus pelin päälle",
+  "settings.overlay_popup_hint": "Kun GameHub on piilossa, pieni kortti oikeassa alakulmassa kertoo, mitä pikanäppäin juuri teki: kuvakaappaus tallennettu, klippi tallennettu, peli jäädytetty.",
+  "settings.overlay_sound": "Soita ääni",
+  "settings.overlay_sound_hint": "Lyhyt pling ponnahduksen kanssa, jotta kuulet sen vaikka et katsoisi.",
+  "settings.popup_note": "Pelit yksinoikeudellisessa koko näytön tilassa peittävät kaikki ikkunat, tämän ponnahduksen mukaan lukien. Aseta peli reunattomaan ikkunaan (oletus useimmissa peleissä), niin se näkyy.",
+  "si.overlay_popup": "Ponnahdus pelin päälle",
+  "si.overlay_sound": "Ponnahduksen ääni"
 }
