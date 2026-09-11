@@ -19,6 +19,9 @@ import { createRequire } from 'node:module';
 const here = dirname(fileURLToPath(import.meta.url));
 const root = join(here, '..');
 const dist = join(root, 'apps/desktop/dist');
+const L = process.env.PREVIEW_LANG === 'en'
+  ? { pick: 'English', library: 'Library', freezes: 'Freeze the game', calendar: 'Calendar', perf: 'Performance', settings: 'Settings', appearance: 'Appearance', search: 'audio', palette: 'freeze', clipboard: 'Clipboard' }
+  : { pick: 'Norsk', library: 'Bibliotek', freezes: 'Frys spillet', calendar: 'Kalender', perf: 'Ytelse', settings: 'Innstillinger', appearance: 'Utseende', search: 'lyd', palette: 'frys', clipboard: 'Utklippstavle' };
 const out = join(here, 'preview-out');
 mkdirSync(out, { recursive: true });
 
@@ -81,7 +84,7 @@ const games = [
 }));
 
 const settings = {
-  startWithWindows: true, minimiseToTray: true, scanIntervalMinutes: 15, autoAddNewGames: true, trackActivity: true,
+  startWithWindows: true, minimiseToTray: true, scanIntervalMinutes: 15, autoAddNewGames: true, trackActivity: true, trackActiveOnly: true, idleMinutes: 10,
   streakThresholdMinutes: 15, screenshotFolder: '', screenshotMonitor: 0, clipboardEnabled: true, accent: '', density: 'comfortable',
   backgroundImage: '', replay: { enabled: true, bufferSeconds: 120, fps: 60, quality: 'medium', monitor: 0, systemAudio: true, audioDevice: '', folder: '', scaleHeight: 1080, saveSeconds: 30, encoder: 'auto' },
   extraGameFolders: ['D:\\Spill'], metadata: { igdbClientId: '', igdbClientSecret: '', steamGridDbKey: '' }, ai: { enabled: false, provider: 'gemini', apiKey: '', model: '' },
@@ -104,7 +107,8 @@ const answers = {
     streaks: { current: 6, longest: 14, totalDays: 88, totalSeconds: 412_000, currentStreakGames: ['Elden Ring', 'Forza Horizon 5', 'Fortnite'], bestMonth: ['2026-07', 98_000] },
     today: { date: now.slice(0, 10), seconds: 5400, games: [['Elden Ring', 5400]], sessionCount: 2 },
     recent: games.slice(0, 6).map((g, i) => [g.id, g.lastPlayed, 3600 * (i + 1)]),
-    current: { gameId: 'steam:1', gameName: 'Elden Ring', startedAt: now, endedAt: now, seconds: 2520 },
+    current: { gameId: 'steam:1', gameName: 'Elden Ring', startedAt: now, endedAt: now, seconds: 2520, wallSeconds: 3100 },
+    currentActive: true,
     trackingEnabled: true,
   }),
   get_quests: () => ({
@@ -195,7 +199,7 @@ const shoot = async (name) => {
 // chosen here so the rest of the tour reads as before.
 await page.waitForSelector('.onboarding');
 await shoot('00-language');
-await page.click('.theme-card:has-text("Norsk")');
+await page.click(`.theme-card:has-text("${L.pick}")`);
 await page.click('.btn-accent.big');
 await page.waitForSelector('.sidebar');
 await page.waitForTimeout(900);
@@ -204,40 +208,40 @@ await shoot('01-home');
 const nav = async (label) => {
   await page.click(`.nav-item:has-text("${label}")`);
 };
-await nav('Bibliotek');
+await nav(L.library);
 await shoot('02-library');
 await page.click('.card-open >> nth=0');
 await shoot('03-game');
 await nav('Replay');
 await shoot('04-replay');
-await nav('Frys spillet');
+await nav(L.freezes);
 await shoot('05-freezes');
 await nav('Screenshots');
 await shoot('06-screenshots');
 await nav('Quests');
 await shoot('07-quests');
-await nav('Kalender');
+await nav(L.calendar);
 await shoot('08-calendar');
-await nav('Ytelse');
+await nav(L.perf);
 await shoot('09-performance');
-await nav('Innstillinger');
+await nav(L.settings);
 await shoot('10-settings-general');
-await page.click('.settings-tab:has-text("Utseende")');
+await page.click(`.settings-tab:has-text("${L.appearance}")`);
 await page.evaluate(() => document.querySelector('.wp')?.scrollIntoView());
 await shoot('10b-settings-wallpapers');
 await page.click('.settings-tab:has-text("Replay")');
 await shoot('11-settings-replay');
-await page.fill('.settings-search input', 'lyd');
+await page.fill('.settings-search input', L.search);
 await shoot('12-settings-search');
 await page.keyboard.press('Escape');
 await page.keyboard.press('Control+k');
 await page.waitForSelector('.palette-input');
-await page.fill('.palette-input', 'frys');
+await page.fill('.palette-input', L.palette);
 await shoot('13-palette');
 await page.keyboard.press('Escape');
 await nav('Streaks');
 await shoot('14-streaks');
-await nav('Utklippstavle');
+await nav(L.clipboard);
 await shoot('15-clipboard');
 
 // The same app in three other languages — the words all change, nothing else.

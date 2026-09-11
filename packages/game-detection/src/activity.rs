@@ -6,6 +6,13 @@
 //! disappears. Days, streaks, the calendar and the "recently played" list are
 //! all views over the same session list rather than separate trackers.
 //!
+//! Playtime is *active* time, not wall time. The watcher says, on every tick,
+//! whether each running game is actually being played — its window in front
+//! and the player not idle — and only those ticks add up. A game left open in
+//! the background, a frozen game, or a PC that went to sleep with the game
+//! running adds nothing. The session still remembers when it started and
+//! ended, so the calendar can show the whole evening.
+//!
 //! The whole module is pure: it takes the set of running game ids and a
 //! timestamp and returns the new state. That is what makes it testable without
 //! a running game, and it is why the tests below can simulate a week of play in
@@ -25,7 +32,12 @@ pub struct Session {
     /// RFC 3339, UTC.
     pub started_at: String,
     pub ended_at: String,
+    /// Seconds of active play — the game in front, the player at the keyboard.
     pub seconds: u64,
+    /// Seconds the game was open in total, for the curious. 0 for sessions
+    /// recorded before active tracking existed.
+    #[serde(default)]
+    pub wall_seconds: u64,
 }
 
 /// A session that has not finished yet.
@@ -35,7 +47,31 @@ pub struct OpenSession {
     pub game_id: String,
     pub game_name: String,
     pub started_at: String,
+    /// Active seconds counted so far.
+    #[serde(default)]
+    pub active_seconds: u64,
+    /// When the watcher last looked, so the next tick knows how much time
+    /// passed. Empty for a session opened by an older version.
+    #[serde(default)]
+    pub last_tick: String,
+    /// Whether the last tick saw the game being played.
+    #[serde(default)]
+    pub active: bool,
 }
+
+/// One running game as the watcher sees it on a tick.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Running {
+    pub game_id: String,
+    pub game_name: String,
+    /// The game is the window in front and the player is not idle.
+    pub active: bool,
+}
+
+/// The longest gap between two ticks that still counts. The watcher looks
+/// every ten seconds; a gap far longer than that means the PC was asleep, and
+/// sleeping is not playing.
+pub const MAX_TICK_SECONDS: u64 = 60;
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", default)]
@@ -73,6 +109,16 @@ pub fn observe(
     running: &[(String, String)],
     now: OffsetDateTime,
 ) -> Vec<ClosedSession> {
+    let seen: Vec<Running> = running
+        .iter()
+        .map(|(id, name)| Running { game_id: id.clone(), game_name: name.clone(), active: true })
+        .collect();
+    observe_active(activity, &seen, now)
+}
+
+/// Like [`observe`], but told which of the running games are actually being
+/// played right now. Only active ticks add to a session's playtime.
+pub fn observe_active(activity: &mut Activity, running: &[Running], now: OffsetDateTime) -> Vec<ClosedSession> {
     if !activity.tracking_enabled {
         // Anything still open when tracking is switched off is closed cleanly
         // rather than left dangling forever.
@@ -81,31 +127,60 @@ pub fn observe(
 
     let mut closed = Vec::new();
 
-    // Games that stopped.
-    let still_running: Vec<&String> = running.iter().map(|(id, _)| id).collect();
+    // Games that stopped, and ticks for the ones still going.
     let mut remaining = Vec::new();
-    for open in std::mem::take(&mut activity.open) {
-        if still_running.iter().any(|id| **id == open.game_id) {
-            remaining.push(open);
-        } else if let Some(session) = finish(&open, now) {
-            activity.sessions.push(session.clone());
-            closed.push(ClosedSession(session));
+    for mut open in std::mem::take(&mut activity.open) {
+        match running.iter().find(|r| r.game_id == open.game_id) {
+            Some(seen) => {
+                tick(&mut open, seen.active, now);
+                remaining.push(open);
+            }
+            None => {
+                if let Some(session) = finish(&open, now) {
+                    activity.sessions.push(session.clone());
+                    closed.push(ClosedSession(session));
+                }
+            }
         }
     }
     activity.open = remaining;
 
     // Games that started.
-    for (id, name) in running {
-        if !activity.open.iter().any(|o| o.game_id == *id) {
+    for seen in running {
+        if !activity.open.iter().any(|o| o.game_id == seen.game_id) {
             activity.open.push(OpenSession {
-                game_id: id.clone(),
-                game_name: name.clone(),
+                game_id: seen.game_id.clone(),
+                game_name: seen.game_name.clone(),
                 started_at: format_time(now),
+                active_seconds: 0,
+                last_tick: format_time(now),
+                active: seen.active,
             });
         }
     }
 
     closed
+}
+
+/// Adds the time since the last tick when the game was being played at both
+/// ends of it. A gap longer than [`MAX_TICK_SECONDS`] is a sleep, not play.
+fn tick(open: &mut OpenSession, active_now: bool, now: OffsetDateTime) {
+    let elapsed = parse_time(&open.last_tick)
+        .map(|last| (now - last).whole_seconds().max(0) as u64)
+        .unwrap_or(0);
+    if active_now && open.active && elapsed <= MAX_TICK_SECONDS {
+        open.active_seconds += elapsed;
+    }
+    open.active = active_now;
+    open.last_tick = format_time(now);
+}
+
+/// Active seconds of an open session as of `now`, for a live display.
+pub fn active_so_far(open: &OpenSession, now: OffsetDateTime) -> u64 {
+    let since_tick = parse_time(&open.last_tick)
+        .map(|last| (now - last).whole_seconds().max(0) as u64)
+        .unwrap_or(0);
+    open.active_seconds + if open.active && since_tick <= MAX_TICK_SECONDS { since_tick } else { 0 }
 }
 
 /// Ends every open session — used when tracking is disabled and at shutdown, so
@@ -126,8 +201,9 @@ const MINIMUM_SESSION_SECONDS: u64 = 60;
 
 fn finish(open: &OpenSession, now: OffsetDateTime) -> Option<Session> {
     let started = parse_time(&open.started_at)?;
-    let seconds = (now - started).whole_seconds();
-    if seconds < MINIMUM_SESSION_SECONDS as i64 {
+    let wall_seconds = (now - started).whole_seconds().max(0) as u64;
+    let seconds = active_so_far(open, now);
+    if seconds < MINIMUM_SESSION_SECONDS {
         return None;
     }
     Some(Session {
@@ -135,7 +211,8 @@ fn finish(open: &OpenSession, now: OffsetDateTime) -> Option<Session> {
         game_name: open.game_name.clone(),
         started_at: open.started_at.clone(),
         ended_at: format_time(now),
-        seconds: seconds as u64,
+        seconds,
+        wall_seconds,
     })
 }
 
@@ -331,6 +408,20 @@ mod tests {
         (id.to_string(), name.to_string())
     }
 
+    /// Feeds the watcher's ten-second ticks for `minutes`, returning what closed.
+    fn play(activity: &mut Activity, running: &[(String, String)], from: OffsetDateTime, minutes: i64) -> OffsetDateTime {
+        let mut now = from;
+        for _ in 0..(minutes * 6) {
+            observe(activity, running, now);
+            now += Duration::seconds(10);
+        }
+        now
+    }
+
+    fn seen(id: &str, name: &str, active: bool) -> Running {
+        Running { game_id: id.into(), game_name: name.into(), active }
+    }
+
     #[test]
     fn a_session_opens_when_a_game_starts_and_closes_when_it_stops() {
         let mut activity = Activity::new();
@@ -340,10 +431,12 @@ mod tests {
         assert!(closed.is_empty());
         assert_eq!(activity.open.len(), 1);
 
-        let closed = observe(&mut activity, &[], start + Duration::minutes(42));
+        let end = play(&mut activity, &[game("steam:440", "Team Fortress 2")], start, 42);
+        let closed = observe(&mut activity, &[], end);
         assert_eq!(closed.len(), 1);
         assert_eq!(activity.sessions.len(), 1);
         assert_eq!(activity.sessions[0].seconds, 42 * 60);
+        assert_eq!(activity.sessions[0].wall_seconds, 42 * 60);
         assert!(activity.open.is_empty());
     }
 
@@ -373,8 +466,8 @@ mod tests {
     fn two_games_at_once_are_two_sessions() {
         let mut activity = Activity::new();
         let start = datetime!(2026-08-30 20:00:00 UTC);
-        observe(&mut activity, &[game("steam:1", "A"), game("steam:2", "B")], start);
-        observe(&mut activity, &[], start + Duration::minutes(30));
+        let end = play(&mut activity, &[game("steam:1", "A"), game("steam:2", "B")], start, 30);
+        observe(&mut activity, &[], end);
         assert_eq!(activity.sessions.len(), 2);
     }
 
@@ -382,15 +475,74 @@ mod tests {
     fn disabling_tracking_closes_what_is_open_and_records_nothing_new() {
         let mut activity = Activity::new();
         let start = datetime!(2026-08-30 20:00:00 UTC);
-        observe(&mut activity, &[game("steam:1", "A")], start);
+        let end = play(&mut activity, &[game("steam:1", "A")], start, 30);
 
         activity.tracking_enabled = false;
-        let closed = observe(&mut activity, &[game("steam:1", "A")], start + Duration::minutes(30));
+        let closed = observe(&mut activity, &[game("steam:1", "A")], end);
         assert_eq!(closed.len(), 1, "the open session is finished rather than abandoned");
 
         observe(&mut activity, &[game("steam:1", "A")], start + Duration::minutes(60));
         assert_eq!(activity.sessions.len(), 1, "nothing new is recorded while tracking is off");
         assert!(activity.open.is_empty());
+    }
+
+    #[test]
+    fn time_in_the_background_does_not_count() {
+        let mut activity = Activity::new();
+        let start = datetime!(2026-09-11 12:30:00 UTC);
+        let mut now = start;
+        // Ten minutes playing, twenty minutes alt-tabbed, ten minutes playing.
+        for (minutes, active) in [(10, true), (20, false), (10, true)] {
+            for _ in 0..(minutes * 6) {
+                observe_active(&mut activity, &[seen("steam:359550", "Siege", active)], now);
+                now += Duration::seconds(10);
+            }
+        }
+        let closed = observe_active(&mut activity, &[], now);
+        assert_eq!(closed.len(), 1);
+        let session = &activity.sessions[0];
+        // Each switch loses at most one ten-second tick; that is the resolution.
+        assert!((session.seconds as i64 - 20 * 60).abs() <= 20, "only the active twenty minutes count, got {}", session.seconds);
+        assert_eq!(session.wall_seconds, 40 * 60, "but the session remembers it was open for forty");
+    }
+
+    #[test]
+    fn a_sleeping_pc_adds_nothing() {
+        let mut activity = Activity::new();
+        let start = datetime!(2026-09-11 12:30:00 UTC);
+        let mut now = play(&mut activity, &[game("steam:1", "A")], start, 5);
+        // The lid closes for three hours; the next tick is far away.
+        now += Duration::hours(3);
+        observe(&mut activity, &[game("steam:1", "A")], now);
+        now = play(&mut activity, &[game("steam:1", "A")], now, 5);
+        observe(&mut activity, &[], now);
+        assert!((activity.sessions[0].seconds as i64 - 10 * 60).abs() <= 20, "got {}", activity.sessions[0].seconds);
+    }
+
+    #[test]
+    fn a_game_only_ever_in_the_background_is_not_a_session() {
+        let mut activity = Activity::new();
+        let start = datetime!(2026-09-11 12:30:00 UTC);
+        let mut now = start;
+        for _ in 0..(30 * 6) {
+            observe_active(&mut activity, &[seen("epic:Fortnite", "Fortnite", false)], now);
+            now += Duration::seconds(10);
+        }
+        let closed = observe_active(&mut activity, &[], now);
+        assert!(closed.is_empty(), "a launcher left open in the background is not play");
+    }
+
+    #[test]
+    fn the_live_counter_includes_the_current_tick_only_while_active() {
+        let mut activity = Activity::new();
+        let start = datetime!(2026-09-11 12:30:00 UTC);
+        let now = play(&mut activity, &[game("steam:1", "A")], start, 2);
+        let open = &activity.open[0];
+        assert_eq!(active_so_far(open, now + Duration::seconds(5)), 120 + 5);
+        let mut idle = open.clone();
+        idle.active = false;
+        // 12 ticks make 11 counted intervals; the part-tick is not added while idle.
+        assert_eq!(active_so_far(&idle, now + Duration::seconds(5)), 110);
     }
 
     /// Builds a session on a given day, of a given length.
@@ -401,6 +553,7 @@ mod tests {
             started_at: format!("{date}T20:00:00Z"),
             ended_at: format!("{date}T21:00:00Z"),
             seconds: minutes * 60,
+            wall_seconds: minutes * 60,
         }
     }
 
@@ -506,6 +659,7 @@ mod tests {
             started_at: "2026-08-30T23:30:00Z".into(),
             ended_at: "2026-08-31T01:30:00Z".into(),
             seconds: 2 * 3600,
+            wall_seconds: 2 * 3600,
         }];
         let by_day = days(&sessions);
         assert!(by_day.contains_key("2026-08-30"));

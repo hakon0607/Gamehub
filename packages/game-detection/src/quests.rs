@@ -425,6 +425,7 @@ mod tests {
             started_at: format!("{date}T20:00:00Z"),
             ended_at: format!("{date}T21:00:00Z"),
             seconds: minutes * 60,
+            wall_seconds: minutes * 60,
         }
     }
 
