@@ -1,0 +1,61 @@
+[package]
+name = "gamehub"
+version = "1.7.0"
+description = "Every PC game you own, in one place."
+edition = "2021"
+rust-version = "1.77"
+
+[lib]
+name = "gamehub_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+# build.rs reads frontendDist out of tauri.conf.json.
+serde_json = "1"
+
+[dependencies]
+gamehub-detect = { path = "../../../packages/game-detection" }
+gamehub-adapters = { path = "../../../packages/launcher-adapters" }
+tauri = { version = "2", features = ["tray-icon", "protocol-asset"] }
+tauri-plugin-dialog = "2"
+tauri-plugin-opener = "2"
+tauri-plugin-single-instance = "2"
+tauri-plugin-updater = "2"
+# relaunch() after an update is installed.
+tauri-plugin-process = "2"
+tauri-plugin-global-shortcut = "2"
+tauri-plugin-clipboard-manager = "2"
+# Screen capture. Cross-platform, no system dependencies on Windows.
+xcap = "0.0.14"
+# png for screenshots and covers; jpeg/webp/bmp so a wallpaper's size can be
+# read from its header.
+image = { version = "0.25", default-features = false, features = ["png", "jpeg", "webp", "bmp"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+notify = "6"
+notify-debouncer-mini = "0.4"
+sysinfo = "0.32"
+# Artwork only. rustls rather than OpenSSL so the Windows build needs no
+# extra system libraries.
+reqwest = { version = "0.12", default-features = false, features = ["blocking", "rustls-tls"] }
+parking_lot = "0.12"
+# System audio for Replay: WASAPI loopback on Windows (what you hear), piped
+# into ffmpeg as raw PCM. No "Stereo Mix" or virtual cable needed.
+cpal = "0.15"
+time = { version = "0.3", features = ["formatting"] }
+
+[target.'cfg(windows)'.dependencies]
+winreg = "0.52"
+windows-sys = { version = "0.59", features = ["Win32_UI_Shell", "Win32_Foundation", "Win32_UI_WindowsAndMessaging", "Win32_UI_Input_KeyboardAndMouse", "Win32_System_SystemInformation"] }
+# Wallpapers: IDesktopWallpaper (desktop, per monitor) and the WinRT
+# LockScreen class — the two ways Windows lets a user-level program set them.
+windows = { version = "0.61", features = ["Win32_Foundation", "Win32_System_Com", "Win32_UI_Shell", "Foundation", "Storage", "Storage_Streams", "System_UserProfile"] }
+
+[dev-dependencies]
+tempfile = "3"
+filetime = "0.2"
+
+[features]
+default = ["custom-protocol"]
+custom-protocol = ["tauri/custom-protocol"]
