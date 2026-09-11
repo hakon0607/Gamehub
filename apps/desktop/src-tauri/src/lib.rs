@@ -127,6 +127,30 @@ pub fn run() {
                 }
             }
 
+            // 1.5.0 shipped with "active only" on; the default is now off. Apply
+            // the new default once, unless the user has set it themselves.
+            {
+                let mut inner = state.inner.lock();
+                if !inner.settings.active_only_chosen {
+                    inner.settings.track_active_only = false;
+                    inner.settings.active_only_chosen = true;
+                    drop(inner);
+                    state.persist_settings();
+                }
+            }
+
+            // Sessions logged by versions that counted wall time can be a game
+            // left open for a day; those are not play and are dropped once.
+            {
+                let mut inner = state.inner.lock();
+                let dropped = gamehub_detect::activity::prune_impossible(&mut inner.activity);
+                drop(inner);
+                if dropped > 0 {
+                    println!("dropped {dropped} impossible session(s) from before active tracking");
+                    state.persist_activity();
+                }
+            }
+
             // Arm the replay buffer if it was left on. Failure here is
             // reported, never fatal: GameHub is a library first.
             if state.settings().replay.enabled {
@@ -212,6 +236,7 @@ pub fn run() {
             commands::set_save_folder,
             commands::get_save_folder,
             commands::set_freeze_note,
+            commands::trim_clip,
             commands::wallpaper_status,
             commands::set_wallpaper,
             commands::forget_wallpaper,

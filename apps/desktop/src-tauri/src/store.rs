@@ -67,9 +67,13 @@ pub struct Settings {
     pub minimise_to_tray: bool,
     pub scan_interval_minutes: u64,
     pub auto_add_new_games: bool,
-    /// Playtime counts only while the game is the window in front. Off, a
-    /// game left open in the background counts too (how it used to be).
+    /// Playtime counts only while the game is the window in front. Off (the
+    /// default), the whole time the game is open counts — though a sleeping
+    /// PC never does.
     pub track_active_only: bool,
+    /// False until the user has touched `track_active_only` themselves, so a
+    /// changed default can be applied once without overriding a real choice.
+    pub active_only_chosen: bool,
     /// Minutes without keyboard or mouse before the clock pauses. 0 = never.
     pub idle_minutes: u64,
     /// Privacy: when false, no playtime, streak or calendar data is recorded.
@@ -122,7 +126,8 @@ impl Default for Settings {
             // launchers that write their manifests somewhere unwatched.
             scan_interval_minutes: 15,
             auto_add_new_games: true,
-            track_active_only: true,
+            track_active_only: false,
+            active_only_chosen: false,
             idle_minutes: 10,
             track_activity: true,
             streak_threshold_minutes: 15,

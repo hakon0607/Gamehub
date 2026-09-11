@@ -1048,6 +1048,72 @@ pub fn delete_replay_clip(state: State<'_, Arc<AppState>>, id: String) -> Reply<
     Ok(())
 }
 
+/// Cuts a clip down to `start..end` seconds with ffmpeg, as a new clip next
+/// to the original (or in its place). Video is re-encoded so the cut lands on
+/// the exact frame rather than the nearest keyframe; audio is copied.
+#[tauri::command]
+pub async fn trim_clip(
+    app: AppHandle,
+    state: State<'_, Arc<AppState>>,
+    id: String,
+    start: f64,
+    end: f64,
+    replace: bool,
+) -> Reply<crate::replay::Clip> {
+    let state = state.inner().clone();
+    blocking(move || {
+        let ffmpeg = ffmpeg_for(&app).ok_or_else(|| crate::msg::plain("replay_no_ffmpeg"))?;
+        let source = {
+            let inner = state.inner.lock();
+            inner.clips.clips.iter().find(|c| c.id == id).cloned().ok_or_else(|| crate::msg::plain("clip_gone"))?
+        };
+        let root = state.paths.clip_root(&state.settings().replay.folder);
+        let source_path = PathBuf::from(&source.path);
+        if !gamehub_detect::safepath::is_within(&root, &source_path) || !source_path.is_file() {
+            return Err(crate::msg::plain("clip_outside"));
+        }
+        let (start, end) = (start.max(0.0), end.min(source.seconds as f64 + 1.0));
+        if !(end - start >= 1.0) {
+            return Err(crate::msg::plain("trim_too_short"));
+        }
+
+        let stem = source_path.file_stem().map(|s| s.to_string_lossy().into_owned()).unwrap_or_else(|| "clip".into());
+        let stamp = gamehub_detect::backup::slug(&gamehub_detect::now_iso8601());
+        let target = source_path.with_file_name(format!("{stem}-trim-{stamp}.mp4"));
+        crate::replay::trim(&ffmpeg, &source_path, &target, start, end - start)?;
+        let size = std::fs::metadata(&target).map(|m| m.len()).unwrap_or(0);
+
+        let recorded_at = gamehub_detect::now_iso8601();
+        let clip = crate::replay::Clip {
+            id: format!("{recorded_at}-trim"),
+            path: target.to_string_lossy().into_owned(),
+            game_id: source.game_id.clone(),
+            game_name: source.game_name.clone(),
+            recorded_at: source.recorded_at.clone(),
+            seconds: (end - start).round() as u64,
+            size_bytes: size,
+            favorite: source.favorite,
+            has_audio: source.has_audio,
+        };
+        {
+            let mut inner = state.inner.lock();
+            if replace {
+                if let Some(position) = inner.clips.clips.iter().position(|c| c.id == id) {
+                    inner.clips.clips.remove(position);
+                    let _ = std::fs::remove_file(&source_path);
+                }
+            }
+            // The trimmed clip sits where the original does in the list.
+            let at = inner.clips.clips.iter().position(|c| c.id == id).unwrap_or(0);
+            inner.clips.clips.insert(at, clip.clone());
+        }
+        state.persist_clips();
+        let _ = app.emit("clip-saved", &clip);
+        Ok(clip)
+    })
+    .await
+}
+
 #[tauri::command]
 pub fn set_clip_favorite(state: State<'_, Arc<AppState>>, id: String, favorite: bool) -> Reply<()> {
     {

@@ -840,5 +840,19 @@
   "settings.idle_hint": "Ei näppäimistöä tai hiirtä näin pitkään, ja kello pysähtyy kunnes palaat. Pitkä välivideo lasketaan silti, jos se on tätä lyhyempi.",
   "home.in_background": "tauolla — taustalla",
   "si.active_only": "Laske vain aktiivinen pelaaminen",
-  "si.idle_minutes": "Pysäytä peliaika, kun olet poissa"
+  "si.idle_minutes": "Pysäytä peliaika, kun olet poissa",
+  "replay.trim": "Leikkaa",
+  "replay.trim_set_start": "Aloita tästä",
+  "replay.trim_set_end": "Lopeta tähän",
+  "replay.trim_preview": "Esikatsele",
+  "replay.trim_range": "{start} – {end} · {length}",
+  "replay.trim_save": "Tallenna uutena klippinä",
+  "replay.trim_replace": "Korvaa alkuperäinen",
+  "replay.trim_replace_hint": "Alkuperäinen tiedosto poistetaan ja leikattu klippi tulee sen tilalle.",
+  "replay.trim_working": "Leikataan …",
+  "replay.trim_done": "Klippi leikattu",
+  "replay.trim_failed": "Klippiä ei leikattu",
+  "sc.remove": "Poista",
+  "sc.remove_hint": "Ei näppäintä lainkaan — toiminto on käytettävissä vain sovelluksen sisällä. Askelpalautin kuuntelun aikana tekee saman.",
+  "be.trim_too_short": "Klipin on oltava vähintään sekunnin pituinen."
 }

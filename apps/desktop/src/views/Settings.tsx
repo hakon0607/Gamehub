@@ -382,7 +382,7 @@ export function SettingsView({
           <>
             <SettingGroup title={t('settings.g_activity')}>
               {row('track-activity', t('settings.track'), t('settings.track_hint'), <Toggle checked={draft.trackActivity} onChange={(v) => void save({ ...draft, trackActivity: v })} />)}
-              {row('active-only', t('settings.active_only'), t('settings.active_only_hint'), <Toggle checked={draft.trackActiveOnly} onChange={(v) => void save({ ...draft, trackActiveOnly: v })} />, 1)}
+              {row('active-only', t('settings.active_only'), t('settings.active_only_hint'), <Toggle checked={draft.trackActiveOnly} onChange={(v) => void save({ ...draft, trackActiveOnly: v, activeOnlyChosen: true })} />, 1)}
               {row('idle-minutes', t('settings.idle'), t('settings.idle_hint'), (
                 <select value={draft.idleMinutes} onChange={(e) => void save({ ...draft, idleMinutes: Number(e.target.value) })}>
                   {[5, 10, 20, 30].map((m) => <option key={m} value={m}>{t('settings.threshold_minutes', { n: m })}</option>)}

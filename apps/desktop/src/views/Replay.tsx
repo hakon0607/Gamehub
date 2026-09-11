@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { convertFileSrc } from '@tauri-apps/api/core';
 import { revealItemInDir } from '@tauri-apps/plugin-opener';
 import { api, events, type Clip, type ReplayStatus, type Settings } from '../api';
@@ -31,6 +31,11 @@ export function Replay({
   const [watching, setWatching] = useState<Clip | null>(null);
   const [deleting, setDeleting] = useState<Clip | null>(null);
   const [game, setGame] = useState('all');
+  // Trimming: a start and end inside the clip being watched.
+  const [trim, setTrim] = useState<{ start: number; end: number } | null>(null);
+  const [trimming, setTrimming] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [playhead, setPlayhead] = useState(0);
   const { busy, run } = useBusy();
 
   const load = useCallback(() => {
@@ -71,6 +76,21 @@ export function Replay({
     } catch (error) {
       onToast(t('toast.replay_failed'), tr(error));
       load();
+    }
+  };
+
+  const saveTrim = async (clip: Clip, range: { start: number; end: number }, replace: boolean) => {
+    setTrimming(true);
+    try {
+      const made = await api.trimClip(clip.id, range.start, range.end, replace);
+      onToast(t('replay.trim_done'), `${made.gameName} · ${formatSeconds(made.seconds)}`);
+      setTrim(null);
+      setWatching(made);
+      load();
+    } catch (error) {
+      onToast(t('replay.trim_failed'), tr(error));
+    } finally {
+      setTrimming(false);
     }
   };
 
@@ -263,23 +283,108 @@ export function Replay({
       )}
 
       {watching && (
-        <div className="scrim" role="dialog" aria-modal="true" onClick={() => setWatching(null)}>
+        <div className="scrim" role="dialog" aria-modal="true" onClick={() => { setWatching(null); setTrim(null); }}>
           <div className="viewer" onClick={(e) => e.stopPropagation()}>
-            <video src={convertFileSrc(watching.path)} controls autoPlay style={{ width: 'min(1100px, 92vw)' }} />
+            <video
+              ref={videoRef}
+              src={convertFileSrc(watching.path)}
+              controls
+              autoPlay
+              style={{ width: 'min(1100px, 92vw)' }}
+              onTimeUpdate={(e) => {
+                const v = e.currentTarget;
+                setPlayhead(v.currentTime);
+                // While trimming, playback stops at the chosen end so the cut can be judged.
+                if (trim && v.currentTime >= trim.end) v.pause();
+              }}
+            />
+            {trim && (
+              <div className="trim">
+                <div
+                  className="trim-bar"
+                  onClick={(e) => {
+                    const rect = e.currentTarget.getBoundingClientRect();
+                    const at = ((e.clientX - rect.left) / rect.width) * (videoRef.current?.duration || watching.seconds);
+                    if (videoRef.current) videoRef.current.currentTime = at;
+                  }}
+                >
+                  <span
+                    className="trim-range"
+                    style={{
+                      left: `${(trim.start / (videoRef.current?.duration || watching.seconds)) * 100}%`,
+                      width: `${((trim.end - trim.start) / (videoRef.current?.duration || watching.seconds)) * 100}%`,
+                    }}
+                  />
+                  <span className="trim-head" style={{ left: `${(playhead / (videoRef.current?.duration || watching.seconds)) * 100}%` }} />
+                </div>
+                <div className="row" style={{ marginTop: 10, gap: 8, flexWrap: 'wrap' }}>
+                  <button className="btn sm" onClick={() => setTrim({ start: Math.min(playhead, trim.end - 1), end: trim.end })}>
+                    {t('replay.trim_set_start')}
+                  </button>
+                  <button className="btn sm" onClick={() => setTrim({ start: trim.start, end: Math.max(playhead, trim.start + 1) })}>
+                    {t('replay.trim_set_end')}
+                  </button>
+                  <button
+                    className="btn sm btn-ghost"
+                    onClick={() => {
+                      if (videoRef.current) {
+                        videoRef.current.currentTime = trim.start;
+                        void videoRef.current.play();
+                      }
+                    }}
+                  >
+                    {t('replay.trim_preview')}
+                  </button>
+                  <span className="note" style={{ alignSelf: 'center' }}>
+                    {t('replay.trim_range', { start: formatSeconds(Math.round(trim.start)), end: formatSeconds(Math.round(trim.end)), length: formatSeconds(Math.round(trim.end - trim.start)) })}
+                  </span>
+                </div>
+              </div>
+            )}
             <div className="dialog-actions">
               <span className="note" style={{ flex: 1, alignSelf: 'center' }}>
                 {watching.gameName} · {formatBytes(watching.sizeBytes)}
                 {watching.hasAudio ? '' : t('replay.without_audio')}
               </span>
-              <button className="btn" onClick={() => void revealItemInDir(watching.path)}>
-                {t('common.show_in_folder')}
-              </button>
-              <button className="btn btn-danger" onClick={() => setDeleting(watching)}>
-                {t('common.delete')}
-              </button>
-              <button className="btn btn-accent" onClick={() => setWatching(null)}>
-                {t('common.close')}
-              </button>
+              {trim ? (
+                <>
+                  <button className="btn" disabled={trimming} onClick={() => setTrim(null)}>
+                    {t('common.cancel')}
+                  </button>
+                  <button
+                    className="btn"
+                    disabled={trimming}
+                    title={t('replay.trim_replace_hint')}
+                    onClick={() => void saveTrim(watching, trim, true)}
+                  >
+                    {t('replay.trim_replace')}
+                  </button>
+                  <button className="btn btn-accent" disabled={trimming} onClick={() => void saveTrim(watching, trim, false)}>
+                    {trimming ? t('replay.trim_working') : t('replay.trim_save')}
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    className="btn"
+                    onClick={() => {
+                      const total = videoRef.current?.duration || watching.seconds;
+                      setTrim({ start: 0, end: total });
+                    }}
+                  >
+                    {t('replay.trim')}
+                  </button>
+                  <button className="btn" onClick={() => void revealItemInDir(watching.path)}>
+                    {t('common.show_in_folder')}
+                  </button>
+                  <button className="btn btn-danger" onClick={() => setDeleting(watching)}>
+                    {t('common.delete')}
+                  </button>
+                  <button className="btn btn-accent" onClick={() => setWatching(null)}>
+                    {t('common.close')}
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </div>

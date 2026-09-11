@@ -840,5 +840,19 @@
   "settings.idle_hint": "Bez klawiatury i myszy przez tyle czasu zegar staje, aż wrócisz. Długa przerywnik nadal się liczy, jeśli trwa krócej.",
   "home.in_background": "pauza — w tle",
   "si.active_only": "Licz tylko aktywną grę",
-  "si.idle_minutes": "Zatrzymuj czas gry, gdy jesteś nieaktywny"
+  "si.idle_minutes": "Zatrzymuj czas gry, gdy jesteś nieaktywny",
+  "replay.trim": "Przytnij",
+  "replay.trim_set_start": "Zacznij tutaj",
+  "replay.trim_set_end": "Zakończ tutaj",
+  "replay.trim_preview": "Podgląd",
+  "replay.trim_range": "{start} – {end} · {length}",
+  "replay.trim_save": "Zapisz jako nowy klip",
+  "replay.trim_replace": "Zastąp oryginał",
+  "replay.trim_replace_hint": "Oryginalny plik zostanie usunięty, a przycięty klip zajmie jego miejsce.",
+  "replay.trim_working": "Przycinanie …",
+  "replay.trim_done": "Klip przycięty",
+  "replay.trim_failed": "Klip nie został przycięty",
+  "sc.remove": "Usuń",
+  "sc.remove_hint": "Bez klawisza — akcja dostępna tylko w aplikacji. Backspace podczas nasłuchiwania robi to samo.",
+  "be.trim_too_short": "Klip musi trwać co najmniej sekundę."
 }

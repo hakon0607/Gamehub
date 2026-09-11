@@ -16,6 +16,7 @@ export interface Settings {
   autoAddNewGames: boolean;
   trackActivity: boolean;
   trackActiveOnly: boolean;
+  activeOnlyChosen: boolean;
   idleMinutes: number;
   streakThresholdMinutes: number;
   screenshotFolder: string;
@@ -393,6 +394,8 @@ export const api = {
   setReplayEnabled: (enabled: boolean) => invoke<void>('set_replay_enabled', { enabled }),
   saveReplay: (seconds?: number) => invoke<Clip>('save_replay', { seconds: seconds ?? null }),
   getClips: () => invoke<Clip[]>('get_clips'),
+  trimClip: (id: string, start: number, end: number, replace: boolean) =>
+    invoke<Clip>('trim_clip', { id, start, end, replace }),
   deleteReplayClip: (id: string) => invoke<void>('delete_replay_clip', { id }),
   setClipFavorite: (id: string, favorite: boolean) => invoke<void>('set_clip_favorite', { id, favorite }),
 

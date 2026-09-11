@@ -840,5 +840,19 @@
   "settings.idle_hint": "So lange keine Tastatur oder Maus, und die Uhr hält an, bis du zurück bist. Eine lange Zwischensequenz zählt trotzdem, wenn sie kürzer ist.",
   "home.in_background": "pausiert — im Hintergrund",
   "si.active_only": "Nur aktives Spielen zählen",
-  "si.idle_minutes": "Spielzeit bei Inaktivität anhalten"
+  "si.idle_minutes": "Spielzeit bei Inaktivität anhalten",
+  "replay.trim": "Zuschneiden",
+  "replay.trim_set_start": "Hier anfangen",
+  "replay.trim_set_end": "Hier enden",
+  "replay.trim_preview": "Vorschau",
+  "replay.trim_range": "{start} – {end} · {length}",
+  "replay.trim_save": "Als neuen Clip speichern",
+  "replay.trim_replace": "Original ersetzen",
+  "replay.trim_replace_hint": "Die Originaldatei wird gelöscht und der zugeschnittene Clip nimmt ihren Platz ein.",
+  "replay.trim_working": "Schneide …",
+  "replay.trim_done": "Clip zugeschnitten",
+  "replay.trim_failed": "Der Clip wurde nicht zugeschnitten",
+  "sc.remove": "Entfernen",
+  "sc.remove_hint": "Gar keine Taste — die Aktion ist nur in der App erreichbar. Rücktaste beim Abhören macht dasselbe.",
+  "be.trim_too_short": "Ein Clip muss mindestens eine Sekunde lang sein."
 }

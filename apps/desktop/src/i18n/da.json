@@ -840,5 +840,19 @@
   "settings.idle_hint": "Intet tastatur eller mus så længe, og uret stopper, til du er tilbage. En lang cutscene tæller stadig, hvis den er kortere end dette.",
   "home.in_background": "pause — i baggrunden",
   "si.active_only": "Tæl kun aktivt spil",
-  "si.idle_minutes": "Sæt spilletid på pause ved inaktivitet"
+  "si.idle_minutes": "Sæt spilletid på pause ved inaktivitet",
+  "replay.trim": "Klip til",
+  "replay.trim_set_start": "Start her",
+  "replay.trim_set_end": "Slut her",
+  "replay.trim_preview": "Forhåndsvis",
+  "replay.trim_range": "{start} – {end} · {length}",
+  "replay.trim_save": "Gem som nyt klip",
+  "replay.trim_replace": "Erstat originalen",
+  "replay.trim_replace_hint": "Originalfilen slettes, og det tilklippede klip tager dens plads.",
+  "replay.trim_working": "Klipper …",
+  "replay.trim_done": "Klippet er kortet ned",
+  "replay.trim_failed": "Klippet blev ikke kortet ned",
+  "sc.remove": "Fjern",
+  "sc.remove_hint": "Ingen tast overhovedet — handlingen nås kun inde i appen. Backspace, mens den lytter, gør det samme.",
+  "be.trim_too_short": "Et klip skal være mindst ét sekund langt."
 }

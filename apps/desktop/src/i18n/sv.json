@@ -840,5 +840,19 @@
   "settings.idle_hint": "Inget tangentbord eller mus så länge, och klockan stannar tills du är tillbaka. En lång mellansekvens räknas fortfarande om den är kortare än detta.",
   "home.in_background": "pausad — i bakgrunden",
   "si.active_only": "Räkna bara aktivt spelande",
-  "si.idle_minutes": "Pausa speltid vid inaktivitet"
+  "si.idle_minutes": "Pausa speltid vid inaktivitet",
+  "replay.trim": "Klipp till",
+  "replay.trim_set_start": "Börja här",
+  "replay.trim_set_end": "Sluta här",
+  "replay.trim_preview": "Förhandsgranska",
+  "replay.trim_range": "{start} – {end} · {length}",
+  "replay.trim_save": "Spara som nytt klipp",
+  "replay.trim_replace": "Ersätt originalet",
+  "replay.trim_replace_hint": "Originalfilen raderas och det tillklippta klippet tar dess plats.",
+  "replay.trim_working": "Klipper …",
+  "replay.trim_done": "Klippet är nedkortat",
+  "replay.trim_failed": "Klippet kortades inte ned",
+  "sc.remove": "Ta bort",
+  "sc.remove_hint": "Ingen tangent alls — åtgärden nås bara inne i appen. Backsteg medan den lyssnar gör samma sak.",
+  "be.trim_too_short": "Ett klipp måste vara minst en sekund långt."
 }

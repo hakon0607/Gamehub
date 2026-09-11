@@ -51,6 +51,19 @@ export function ShortcutCenter({
         setListening(null);
         return;
       }
+      // Backspace or Delete while listening removes the shortcut entirely.
+      if (event.key === 'Backspace' || event.key === 'Delete') {
+        const action = listening;
+        setListening(null);
+        try {
+          await api.setShortcut(action, '');
+          load();
+          window.dispatchEvent(new Event('shortcuts-changed'));
+        } catch (error) {
+          onToast(t('sc.not_set'), tr(error));
+        }
+        return;
+      }
       const binding = accelerator(event);
       if (!binding) return;
       const action = listening;
@@ -81,6 +94,23 @@ export function ShortcutCenter({
       >
         {listening === shortcut.action ? t('sc.press') : shortcut.binding || t('sc.none')}
       </button>
+      {shortcut.binding && (
+        <button
+          className="btn sm btn-ghost"
+          title={t('sc.remove_hint')}
+          onClick={async () => {
+            try {
+              await api.setShortcut(shortcut.action, '');
+              load();
+              window.dispatchEvent(new Event('shortcuts-changed'));
+            } catch (error) {
+              onToast(t('sc.not_set'), tr(error));
+            }
+          }}
+        >
+          {t('sc.remove')}
+        </button>
+      )}
       {shortcut.binding !== shortcut.defaultBinding && (
         <button
           className="btn sm btn-ghost"

@@ -840,5 +840,19 @@
   "settings.idle_hint": "Zo lang geen toetsenbord of muis, en de klok stopt tot je terug bent. Een lange cutscene telt nog steeds als hij korter is dan dit.",
   "home.in_background": "gepauzeerd — op de achtergrond",
   "si.active_only": "Alleen actief spelen tellen",
-  "si.idle_minutes": "Speeltijd pauzeren bij inactiviteit"
+  "si.idle_minutes": "Speeltijd pauzeren bij inactiviteit",
+  "replay.trim": "Bijsnijden",
+  "replay.trim_set_start": "Begin hier",
+  "replay.trim_set_end": "Eindig hier",
+  "replay.trim_preview": "Voorbeeld",
+  "replay.trim_range": "{start} – {end} · {length}",
+  "replay.trim_save": "Opslaan als nieuwe clip",
+  "replay.trim_replace": "Origineel vervangen",
+  "replay.trim_replace_hint": "Het originele bestand wordt verwijderd en de bijgesneden clip neemt zijn plaats in.",
+  "replay.trim_working": "Knippen …",
+  "replay.trim_done": "Clip bijgesneden",
+  "replay.trim_failed": "De clip is niet bijgesneden",
+  "sc.remove": "Verwijderen",
+  "sc.remove_hint": "Helemaal geen toets — de actie is alleen in de app bereikbaar. Backspace tijdens het luisteren doet hetzelfde.",
+  "be.trim_too_short": "Een clip moet minstens één seconde duren."
 }

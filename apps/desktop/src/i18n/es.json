@@ -840,5 +840,19 @@
   "settings.idle_hint": "Sin teclado ni ratón durante este tiempo, y el reloj se para hasta que vuelvas. Una cinemática larga sigue contando si dura menos que esto.",
   "home.in_background": "en pausa — en segundo plano",
   "si.active_only": "Contar solo el juego activo",
-  "si.idle_minutes": "Pausar el tiempo de juego si estás ausente"
+  "si.idle_minutes": "Pausar el tiempo de juego si estás ausente",
+  "replay.trim": "Recortar",
+  "replay.trim_set_start": "Empezar aquí",
+  "replay.trim_set_end": "Terminar aquí",
+  "replay.trim_preview": "Vista previa",
+  "replay.trim_range": "{start} – {end} · {length}",
+  "replay.trim_save": "Guardar como clip nuevo",
+  "replay.trim_replace": "Reemplazar el original",
+  "replay.trim_replace_hint": "El archivo original se borra y el clip recortado ocupa su lugar.",
+  "replay.trim_working": "Cortando …",
+  "replay.trim_done": "Clip recortado",
+  "replay.trim_failed": "El clip no se recortó",
+  "sc.remove": "Quitar",
+  "sc.remove_hint": "Sin tecla — la acción solo se alcanza dentro de la app. Retroceso mientras escucha hace lo mismo.",
+  "be.trim_too_short": "Un clip debe durar al menos un segundo."
 }

@@ -840,5 +840,19 @@
   "settings.idle_hint": "Ni clavier ni souris pendant ce temps, et le chrono s'arrête jusqu'à ton retour. Une longue cinématique compte quand même si elle est plus courte que ça.",
   "home.in_background": "en pause — en arrière-plan",
   "si.active_only": "Compter seulement le jeu actif",
-  "si.idle_minutes": "Pause du temps de jeu si inactif"
+  "si.idle_minutes": "Pause du temps de jeu si inactif",
+  "replay.trim": "Rogner",
+  "replay.trim_set_start": "Commencer ici",
+  "replay.trim_set_end": "Finir ici",
+  "replay.trim_preview": "Aperçu",
+  "replay.trim_range": "{start} – {end} · {length}",
+  "replay.trim_save": "Enregistrer comme nouveau clip",
+  "replay.trim_replace": "Remplacer l'original",
+  "replay.trim_replace_hint": "Le fichier original est supprimé et le clip rogné prend sa place.",
+  "replay.trim_working": "Découpe …",
+  "replay.trim_done": "Clip rogné",
+  "replay.trim_failed": "Le clip n'a pas été rogné",
+  "sc.remove": "Retirer",
+  "sc.remove_hint": "Aucune touche — l'action n'est accessible que dans l'app. Retour arrière pendant l'écoute fait pareil.",
+  "be.trim_too_short": "Un clip doit durer au moins une seconde."
 }

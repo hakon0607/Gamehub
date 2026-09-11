@@ -904,6 +904,35 @@ pub fn save_clip(
 }
 
 
+/// Cuts `length` seconds starting at `start` out of a clip into `target`.
+///
+/// `-ss` before `-i` seeks fast to the nearest keyframe and decodes from
+/// there, and re-encoding the video makes the cut land on the exact frame
+/// asked for instead of snapping to a keyframe up to two seconds away. Audio
+/// is copied untouched.
+pub fn trim(ffmpeg: &Path, source: &Path, target: &Path, start: f64, length: f64) -> Result<(), String> {
+    let mut command = Command::new(ffmpeg);
+    command.args(["-hide_banner", "-loglevel", "error", "-y"]);
+    command.args(["-ss", &format!("{start:.3}"), "-i", &source.to_string_lossy()]);
+    command.args(["-t", &format!("{length:.3}")]);
+    command.args(["-c:v", "libx264", "-preset", "veryfast", "-crf", "20", "-pix_fmt", "yuv420p"]);
+    command.args(["-c:a", "copy", "-movflags", "+faststart", &target.to_string_lossy()]);
+    #[cfg(windows)]
+    {
+        use std::os::windows::process::CommandExt;
+        command.creation_flags(0x0800_0000);
+    }
+    let output = command
+        .output()
+        .map_err(|e| crate::msg::code("ffmpeg_start", &[&e.to_string()]))?;
+    if !output.status.success() {
+        let _ = std::fs::remove_file(target);
+        let detail = String::from_utf8_lossy(&output.stderr);
+        return Err(crate::msg::code("clip_save", &[detail.lines().last().unwrap_or("?")]));
+    }
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1195,6 +1224,27 @@ mod ffmpeg_tests {
             .split(if cfg!(windows) { ';' } else { ':' })
             .map(|dir| Path::new(dir).join(name))
             .find(|candidate| candidate.is_file())
+    }
+
+    #[test]
+    fn a_clip_can_be_trimmed_to_a_window() {
+        let Some(ffmpeg) = ffmpeg_on_path() else { return };
+        let tmp = tempfile::tempdir().unwrap();
+        let source = tmp.path().join("six.mp4");
+        let ok = Command::new(&ffmpeg)
+            .args(["-hide_banner", "-loglevel", "error", "-y", "-f", "lavfi", "-i", "color=c=blue:s=320x240:r=10:d=6", "-f", "lavfi", "-i", "sine=frequency=440:duration=6", "-c:v", "libx264", "-c:a", "aac", "-shortest"])
+            .arg(&source)
+            .status()
+            .map(|s| s.success())
+            .unwrap_or(false);
+        if !ok {
+            return;
+        }
+        let target = tmp.path().join("cut.mp4");
+        trim(&ffmpeg, &source, &target, 2.0, 2.0).unwrap();
+        let seconds = total_duration(&ffmpeg, std::slice::from_ref(&target)).unwrap();
+        assert!((seconds - 2.0).abs() < 0.3, "got {seconds}");
+        assert!(trim(&ffmpeg, &source, &tmp.path().join("bad.mp4"), 2.0, -1.0).is_err());
     }
 
     /// Writes `count` segments of `seconds` each, oldest first.

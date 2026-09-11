@@ -2570,3 +2570,9 @@ html.overlay-window #root {
   height: 100%;
   object-fit: cover;
 }
+
+/* ------------------------------------------------------------------ clip trimming */
+.trim { width: min(1100px, 92vw); margin-top: 10px; }
+.trim-bar { position: relative; height: 22px; border-radius: 11px; background: rgba(255,255,255,0.08); cursor: pointer; overflow: hidden; }
+.trim-range { position: absolute; top: 0; bottom: 0; background: color-mix(in srgb, var(--accent) 55%, transparent); border-left: 2px solid var(--accent); border-right: 2px solid var(--accent); }
+.trim-head { position: absolute; top: 0; bottom: 0; width: 3px; background: #fff; box-shadow: 0 0 8px #fff; }

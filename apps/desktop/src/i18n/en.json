@@ -840,5 +840,19 @@
   "settings.idle_hint": "No keyboard or mouse for this long and the clock pauses until you are back. A long cutscene still counts if you keep it under this.",
   "home.in_background": "paused — in the background",
   "si.active_only": "Count only active play",
-  "si.idle_minutes": "Pause playtime when idle"
+  "si.idle_minutes": "Pause playtime when idle",
+  "replay.trim": "Trim",
+  "replay.trim_set_start": "Start here",
+  "replay.trim_set_end": "End here",
+  "replay.trim_preview": "Preview",
+  "replay.trim_range": "{start} – {end} · {length}",
+  "replay.trim_save": "Save as new clip",
+  "replay.trim_replace": "Replace original",
+  "replay.trim_replace_hint": "The original file is deleted and the trimmed clip takes its place.",
+  "replay.trim_working": "Cutting …",
+  "replay.trim_done": "Clip trimmed",
+  "replay.trim_failed": "The clip was not trimmed",
+  "sc.remove": "Remove",
+  "sc.remove_hint": "No key at all — the action is only reachable from inside the app. Backspace while listening does the same.",
+  "be.trim_too_short": "A clip must be at least one second long."
 }
