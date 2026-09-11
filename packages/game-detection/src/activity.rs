@@ -183,6 +183,22 @@ pub fn active_so_far(open: &OpenSession, now: OffsetDateTime) -> u64 {
     open.active_seconds + if open.active && since_tick <= MAX_TICK_SECONDS { since_tick } else { 0 }
 }
 
+/// Sessions no human played: longer than this and recorded by a version
+/// that counted wall time (no `wall_seconds`), they are a game left open
+/// overnight, not play.
+pub const IMPOSSIBLE_SESSION_SECONDS: u64 = 12 * 3600;
+
+/// Drops sessions recorded before active tracking existed that are too long
+/// to be real. Returns how many went. Sessions from the new method are kept
+/// whatever their length — they were measured, not assumed.
+pub fn prune_impossible(activity: &mut Activity) -> usize {
+    let before = activity.sessions.len();
+    activity
+        .sessions
+        .retain(|s| !(s.wall_seconds == 0 && s.seconds > IMPOSSIBLE_SESSION_SECONDS));
+    before - activity.sessions.len()
+}
+
 /// Ends every open session — used when tracking is disabled and at shutdown, so
 /// a crash is the only way to lose a session rather than the normal path.
 pub fn close_all(activity: &mut Activity, now: OffsetDateTime) -> Vec<ClosedSession> {
@@ -484,6 +500,19 @@ mod tests {
         observe(&mut activity, &[game("steam:1", "A")], start + Duration::minutes(60));
         assert_eq!(activity.sessions.len(), 1, "nothing new is recorded while tracking is off");
         assert!(activity.open.is_empty());
+    }
+
+    #[test]
+    fn overnight_sessions_from_the_old_method_are_pruned_but_measured_ones_stay() {
+        let mut activity = Activity::new();
+        activity.sessions = vec![
+            Session { game_id: "steam:1".into(), game_name: "Siege".into(), started_at: "2026-09-10T12:00:00Z".into(), ended_at: "2026-09-11T11:00:00Z".into(), seconds: 23 * 3600, wall_seconds: 0 },
+            Session { game_id: "steam:1".into(), game_name: "Siege".into(), started_at: "2026-09-10T12:00:00Z".into(), ended_at: "2026-09-10T14:00:00Z".into(), seconds: 2 * 3600, wall_seconds: 0 },
+            Session { game_id: "steam:1".into(), game_name: "Siege".into(), started_at: "2026-09-12T12:00:00Z".into(), ended_at: "2026-09-13T02:00:00Z".into(), seconds: 13 * 3600, wall_seconds: 14 * 3600 },
+        ];
+        assert_eq!(prune_impossible(&mut activity), 1);
+        assert_eq!(activity.sessions.len(), 2);
+        assert!(activity.sessions.iter().all(|s| s.seconds != 23 * 3600));
     }
 
     #[test]

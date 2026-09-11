@@ -9,7 +9,7 @@
  *
  *   pnpm --filter @gamehub/desktop build && node scripts/preview.mjs
  */
-import { existsSync, mkdirSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync } from 'node:fs';
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { extname, join, dirname } from 'node:path';
@@ -44,6 +44,20 @@ const server = createServer(async (req, res) => {
 await new Promise((resolve) => server.listen(0, resolve));
 const port = server.address().port;
 
+// Real artwork when PREVIEW_ART points at an exported artwork folder: the
+// user's own covers, as data URLs. Otherwise a coloured placeholder.
+const realArt = (art, kind) => {
+  const dir = process.env.PREVIEW_ART;
+  if (!dir) return null;
+  const candidates = art.endsWith('_custom') ? (kind === 'cover' ? [`${art}.png`] : []) : [`${art}_${kind}.jpg`];
+  for (const name of candidates) {
+    try {
+      const bytes = readFileSync(join(dir, name));
+      return `data:image/${name.endsWith('.png') ? 'png' : 'jpeg'};base64,${bytes.toString('base64')}`;
+    } catch {}
+  }
+  return null;
+};
 // A cover as a data URL, so the grid has pictures.
 const cover = (hue) =>
   `data:image/svg+xml;utf8,${encodeURIComponent(
@@ -55,23 +69,23 @@ const frame = (hue) =>
   )}`;
 
 const games = [
-  ['steam:1', 'steam', 'Elden Ring', 200, true],
-  ['steam:2', 'steam', 'Cyberpunk 2077', 45, false],
-  ['epic:3', 'epic', 'Fortnite', 120, false],
-  ['gog:4', 'gog', 'The Witcher 3: Wild Hunt', 30, true],
-  ['xbox:5', 'xbox', 'Forza Horizon 5', 280, false],
-  ['battlenet:6', 'battlenet', 'Diablo IV', 0, false],
-  ['ea:7', 'ea', 'Battlefield 2042', 350, false],
-  ['riot:8', 'riot', 'League of Legends', 90, false],
-  ['ubisoft:9', 'ubisoft', "Assassin's Creed Mirage", 20, false],
-  ['local:10', 'local', 'Minecraft Launcher', 60, true],
-].map(([id, source, name, hue, favorite], i) => ({
+  ['steam:1', 'steam', 'Rainbow Six Siege', 200, true, '359550'],
+  ['steam:2', 'steam', 'Grand Theft Auto V Enhanced', 45, false, '3240220'],
+  ['epic:3', 'epic', 'Fortnite', 120, true, 'epic_Fortnite_custom'],
+  ['epic:4', 'epic', 'Rocket League', 30, true, 'epic_Sugar_custom'],
+  ['steam:5', 'steam', 'Forza Horizon 5', 280, false, '1551360'],
+  ['ea:6', 'ea', 'The Sims 4', 330, false, 'ea__48EBEBBF_B9F8_4520_A3CF_89A730721917__custom'],
+  ['steam:7', 'steam', 'House Flipper', 90, false, '613100'],
+  ['steam:8', 'steam', 'Supermarket Simulator', 20, false, '2670630'],
+  ['steam:9', 'steam', 'Russian Fishing 4', 60, false, '766570'],
+  ['steam:10', 'steam', 'Gym Simulator 24', 190, false, '2559270'],
+].map(([id, source, name, hue, favorite, art], i) => ({
   id,
   source,
   sourceId: id.split(':')[1],
   name,
   installDir: `C:\\Games\\${name}`,
-  installed: i !== 5,
+  installed: true,
   launch: { kind: 'uri', uri: `${source}://run/${i}` },
   sizeBytes: 40e9 + i * 3e9,
   playtimeSeconds: 3600 * (i + 1) * 7,
@@ -79,12 +93,12 @@ const games = [
   favorite,
   hidden: false,
   tags: i === 9 ? ['added by hand'] : [],
-  metadata: i === 5 ? null : { coverPath: cover(hue), heroPath: null, logoPath: null, description: null, genres: [], releaseDate: null, developer: null, publisher: null, provider: i === 2 ? 'steam-guess' : 'steam', fetchedAt: null },
+  metadata: { coverPath: realArt(art, 'cover') ?? cover(hue), heroPath: realArt(art, 'hero'), logoPath: null, description: null, genres: [], releaseDate: null, developer: null, publisher: null, provider: 'steam', fetchedAt: null },
   discoveredAt: '2026-08-30T10:00:00Z',
 }));
 
 const settings = {
-  startWithWindows: true, minimiseToTray: true, scanIntervalMinutes: 15, autoAddNewGames: true, trackActivity: true, trackActiveOnly: true, idleMinutes: 10,
+  startWithWindows: true, minimiseToTray: true, scanIntervalMinutes: 15, autoAddNewGames: true, trackActivity: true, trackActiveOnly: false, activeOnlyChosen: true, idleMinutes: 10,
   streakThresholdMinutes: 15, screenshotFolder: '', screenshotMonitor: 0, clipboardEnabled: true, accent: '', density: 'comfortable',
   backgroundImage: '', replay: { enabled: true, bufferSeconds: 120, fps: 60, quality: 'medium', monitor: 0, systemAudio: true, audioDevice: '', folder: '', scaleHeight: 1080, saveSeconds: 30, encoder: 'auto' },
   extraGameFolders: ['D:\\Spill'], metadata: { igdbClientId: '', igdbClientSecret: '', steamGridDbKey: '' }, ai: { enabled: false, provider: 'gemini', apiKey: '', model: '' },
@@ -93,9 +107,9 @@ const settings = {
 
 const now = new Date().toISOString();
 const freezes = [
-  { id: 'f1', gameId: 'steam:1', gameName: 'Elden Ring', frozenAt: now, state: 'frozen', pids: [1234], folder: 'C:\\Users\\Håkon\\AppData\\Roaming\\GameHub\\Clips\\Elden Ring\\Frys_2026-09-09', saveDir: 'C:\\Users\\Håkon\\AppData\\Roaming\\EldenRing', saveCopy: '...\\save', saveFiles: 12, saveBytes: 3_400_000, skipped: [], picture: frame(200), note: 'Rett før Malenia' },
-  { id: 'f2', gameId: 'steam:2', gameName: 'Cyberpunk 2077', frozenAt: '2026-09-08T19:12:00Z', state: 'resumed', pids: [999], folder: '...', saveDir: null, saveCopy: null, saveFiles: 0, saveBytes: 0, skipped: [], picture: frame(45), note: '' },
-  { id: 'f3', gameId: 'gog:4', gameName: 'The Witcher 3: Wild Hunt', frozenAt: '2026-09-05T21:40:00Z', state: 'gone', pids: [], folder: '...', saveDir: 'C:\\...', saveCopy: '...', saveFiles: 40, saveBytes: 22_000_000, skipped: ['C:\\...\\huge.cache'], picture: null, note: '' },
+  { id: 'f1', gameId: 'steam:1', gameName: 'Rainbow Six Siege', frozenAt: now, state: 'frozen', pids: [1234], folder: 'C:\\Users\\Håkon\\AppData\\Roaming\\GameHub\\Clips\\Rainbow Six Siege\\Frys_2026-09-09', saveDir: 'C:\\Users\\Håkon\\AppData\\Roaming\\R6Siege', saveCopy: '...\\save', saveFiles: 12, saveBytes: 3_400_000, skipped: [], picture: frame(200), note: 'Right before the final round' },
+  { id: 'f2', gameId: 'steam:2', gameName: 'Grand Theft Auto V', frozenAt: '2026-09-08T19:12:00Z', state: 'resumed', pids: [999], folder: '...', saveDir: null, saveCopy: null, saveFiles: 0, saveBytes: 0, skipped: [], picture: frame(45), note: '' },
+  { id: 'f3', gameId: 'epic:4', gameName: 'Rocket League', frozenAt: '2026-09-05T21:40:00Z', state: 'gone', pids: [], folder: '...', saveDir: 'C:\\...', saveCopy: '...', saveFiles: 40, saveBytes: 22_000_000, skipped: ['C:\\...\\huge.cache'], picture: null, note: '' },
 ];
 
 const answers = {
@@ -104,26 +118,26 @@ const answers = {
   get_settings: () => settings,
   save_settings: (a) => Object.assign(settings, a.settings),
   get_activity: () => ({
-    streaks: { current: 6, longest: 14, totalDays: 88, totalSeconds: 412_000, currentStreakGames: ['Elden Ring', 'Forza Horizon 5', 'Fortnite'], bestMonth: ['2026-07', 98_000] },
-    today: { date: now.slice(0, 10), seconds: 5400, games: [['Elden Ring', 5400]], sessionCount: 2 },
+    streaks: { current: 6, longest: 14, totalDays: 88, totalSeconds: 412_000, currentStreakGames: ['Rainbow Six Siege', 'Forza Horizon 5', 'Fortnite'], bestMonth: ['2026-07', 98_000] },
+    today: { date: now.slice(0, 10), seconds: 5400, games: [['Rainbow Six Siege', 5400]], sessionCount: 2 },
     recent: games.slice(0, 6).map((g, i) => [g.id, g.lastPlayed, 3600 * (i + 1)]),
-    current: { gameId: 'steam:1', gameName: 'Elden Ring', startedAt: now, endedAt: now, seconds: 2520, wallSeconds: 3100 },
+    current: { gameId: 'steam:1', gameName: 'Rainbow Six Siege', startedAt: now, endedAt: now, seconds: 2520, wallSeconds: 3100 },
     currentActive: true,
     trackingEnabled: true,
   }),
   get_quests: () => ({
     daily: [{ id: 'q1', period: 'daily', title: 'Spill i 30 minutter', description: 'Hva som helst teller.', goal: { kind: 'totalPlaytime', seconds: 1800 }, xp: 200, progress: 1200, target: 1800, complete: false }],
     biweekly: [
-      { id: 'q2', period: 'biweekly', title: 'Tilbake til Cyberpunk 2077', description: 'Ikke rørt på en måned.', goal: { kind: 'revisit', gameId: 'steam:2', gameName: 'Cyberpunk 2077', seconds: 1800 }, xp: 500, progress: 1, target: 1, complete: true },
+      { id: 'q2', period: 'biweekly', title: 'Tilbake til Grand Theft Auto V', description: 'Ikke rørt på en måned.', goal: { kind: 'revisit', gameId: 'steam:2', gameName: 'Grand Theft Auto V', seconds: 1800 }, xp: 500, progress: 1, target: 1, complete: true },
       { id: 'q3', period: 'biweekly', title: 'Tre ulike spill', description: 'Spill tre forskjellige spill.', goal: { kind: 'distinctGames', count: 3 }, xp: 500, progress: 2, target: 3, complete: false },
     ],
-    monthly: [{ id: 'q4', period: 'monthly', title: 'Ti timer i Elden Ring', description: 'Favoritten din.', goal: { kind: 'playGame', gameId: 'steam:1', gameName: 'Elden Ring', seconds: 36000 }, xp: 1000, progress: 21_600, target: 36_000, complete: false }],
+    monthly: [{ id: 'q4', period: 'monthly', title: 'Ten hours in Rainbow Six Siege', description: 'Your favourite.', goal: { kind: 'playGame', gameId: 'steam:1', gameName: 'Rainbow Six Siege', seconds: 36000 }, xp: 1000, progress: 21_600, target: 36_000, complete: false }],
     xp: 12_400, level: 2, xpIntoLevel: 2_400, xpForLevel: 10_000,
   }),
-  get_calendar_month: (a) => [3, 4, 7, 8, 9].map((d) => ({ date: `${a.month}-${String(d).padStart(2, '0')}`, seconds: 1800 * d, games: [['Elden Ring', 1200 * d], ['Fortnite', 600 * d]], sessionCount: 2 })),
+  get_calendar_month: (a) => [3, 4, 7, 8, 9].map((d) => ({ date: `${a.month}-${String(d).padStart(2, '0')}`, seconds: 1800 * d, games: [['Rainbow Six Siege', 1200 * d], ['Fortnite', 600 * d]], sessionCount: 2 })),
   replay_status: () => ({ enabled: true, running: true, problem: null, ffmpegPath: 'C:\\...\\ffmpeg.exe', bufferSeconds: 120, bufferedSeconds: 87, minBufferSeconds: 30, maxBufferSeconds: 600, clipFolder: 'C:\\Users\\Håkon\\AppData\\Roaming\\GameHub\\Clips', bufferEstimateMb: 96, audio: { systemAudio: true, systemDevice: 'Høyttalere (Realtek(R) Audio)', microphone: false, note: null } }),
-  get_clips: () => [1, 2, 3, 4].map((i) => ({ id: `c${i}`, path: '', gameId: 'steam:1', gameName: i % 2 ? 'Elden Ring' : 'Fortnite', recordedAt: new Date(Date.now() - i * 3_600_000).toISOString(), seconds: 30 * i, sizeBytes: 42_000_000 * i, favorite: i === 1, hasAudio: i !== 4 })),
-  freeze_status: () => ({ supported: true, currentGameId: 'steam:1', currentGameName: 'Elden Ring', active: freezes[0], saveDir: freezes[0].saveDir, folder: 'C:\\...\\Clips' }),
+  get_clips: () => [1, 2, 3, 4].map((i) => ({ id: `c${i}`, path: '', gameId: 'steam:1', gameName: i % 2 ? 'Rainbow Six Siege' : 'Fortnite', recordedAt: new Date(Date.now() - i * 3_600_000).toISOString(), seconds: 30 * i, sizeBytes: 42_000_000 * i, favorite: i === 1, hasAudio: i !== 4 })),
+  freeze_status: () => ({ supported: true, currentGameId: 'steam:1', currentGameName: 'Rainbow Six Siege', active: freezes[0], saveDir: freezes[0].saveDir, folder: 'C:\\...\\Clips' }),
   get_freezes: () => freezes,
   get_shortcuts: () => [
     ['open_gamehub', 'Open GameHub', 'global', 'Ctrl+Shift+G'], ['quick_tools', 'Quick Tools', 'global', 'Ctrl+Space'], ['screenshot', 'Take a screenshot', 'global', 'F9'],
@@ -131,7 +145,7 @@ const answers = {
     ['toggle_overlay', 'Overlay', 'global', 'Ctrl+Shift+O'], ['search', 'Search', 'app', 'Ctrl+F'], ['library', 'Library', 'app', 'Ctrl+1'], ['home', 'Home', 'app', 'Ctrl+0'],
     ['settings', 'Settings', 'app', 'Ctrl+,'], ['freezes', 'Freezes', 'app', 'Ctrl+Shift+F'], ['rescan', 'Rescan', 'app', 'F5'],
   ].map(([action, label, scope, binding]) => ({ action, label, scope, binding, defaultBinding: binding })),
-  get_screenshots: () => [['Elden Ring', [1, 2, 3].map((i) => ({ id: `s${i}`, path: frame(200 + i * 20), gameId: 'steam:1', gameName: 'Elden Ring', takenAt: now, sizeBytes: 2e6, favorite: i === 2 }))], ['Desktop', [{ id: 's9', path: frame(10), gameId: null, gameName: 'Desktop', takenAt: now, sizeBytes: 1e6, favorite: false }]]],
+  get_screenshots: () => [['Rainbow Six Siege', [1, 2, 3].map((i) => ({ id: `s${i}`, path: frame(200 + i * 20), gameId: 'steam:1', gameName: 'Rainbow Six Siege', takenAt: now, sizeBytes: 2e6, favorite: i === 2 }))], ['Desktop', [{ id: 's9', path: frame(10), gameId: null, gameName: 'Desktop', takenAt: now, sizeBytes: 1e6, favorite: false }]]],
   get_clipboard: () => [1, 2, 3].map((i) => ({ id: `k${i}`, text: i === 2 ? 'https://github.com/hakon0607/gamehub' : `Kopiert tekst nummer ${i} — en litt lengre setning for å vise avkorting i listen.`, length: 80, truncated: false, copiedAt: now, pinned: i === 1, isUrl: i === 2 })),
   sample_performance: () => ({ cpuPercent: 37 + Math.random() * 10, cpuName: 'AMD Ryzen 7 7800X3D', cpuCores: 16, memoryUsedBytes: 14e9, memoryTotalBytes: 32e9, swapUsedBytes: 0, diskReadBytes: 0, diskWrittenBytes: 0, networkDownBytes: 3.2e9, networkUpBytes: 0.4e9, disks: [{ name: 'C:', usedBytes: 700e9, totalBytes: 1000e9 }, { name: 'D:', usedBytes: 1.2e12, totalBytes: 2e12 }], gameProcesses: [{ name: 'eldenring.exe', cpuPercent: 24, memoryBytes: 6e9 }], fps: null, gpuPercent: null, cpuTemperatureC: null, unavailableNote: 'FPS, GPU-last og temperaturer krever drivertilgang GameHub ikke har.', sampledAt: now }),
   list_backups: () => [{ id: 'b1', reason: 'update-from-0.6.0', appVersion: '1.0.0', takenAt: now, files: ['library.json', 'settings.json'], bytes: 120_000 }],
@@ -141,7 +155,7 @@ const answers = {
   replay_audio_devices: () => ({ devices: ['Mikrofon (Realtek(R) Audio)', 'Stereo Mix (Realtek(R) Audio)'], suggested: 'Stereo Mix (Realtek(R) Audio)' }),
   list_displays: () => ['\\\\.\\DISPLAY1 (2560×1440)', '\\\\.\\DISPLAY2 (1920×1080)'],
   hidden_count: () => 2,
-  get_save_folder: () => 'C:\\Users\\Håkon\\AppData\\Roaming\\EldenRing',
+  get_save_folder: () => 'C:\\Users\\Håkon\\AppData\\Roaming\\R6Siege',
   wallpaper_status: () => ({
     supported: true, lockSupported: true,
     desktop: { path: frame(120), fileName: 'nordlys-4k.jpg', width: 3840, height: 2160, bytes: 4_200_000 },
