@@ -833,5 +833,12 @@
   "be.wallpaper_com": "Windowsin taustakuvapalvelu ei vastannut: {0}",
   "be.wallpaper_desktop_failed": "Windows kieltäytyi työpöydän kuvasta: {0}",
   "be.wallpaper_lock_failed": "Windows kieltäytyi lukitusnäytön kuvasta: {0}",
-  "be.wallpaper_windows_only": "Taustakuvia voi asettaa vain Windowsissa."
+  "be.wallpaper_windows_only": "Taustakuvia voi asettaa vain Windowsissa.",
+  "settings.active_only": "Laske vain aktiivinen pelaaminen",
+  "settings.active_only_hint": "Aika kuluu, kun peli on etummainen ikkuna. Alt-tab Discordiin tai työpöydälle, ja kello pysähtyy. Jäädytetty peli ei koskaan laske. Pois: taustalla auki oleva peli lasketaan myös.",
+  "settings.idle": "Pysäytä kello ilman syötettä, kun kulunut",
+  "settings.idle_hint": "Ei näppäimistöä tai hiirtä näin pitkään, ja kello pysähtyy kunnes palaat. Pitkä välivideo lasketaan silti, jos se on tätä lyhyempi.",
+  "home.in_background": "tauolla — taustalla",
+  "si.active_only": "Laske vain aktiivinen pelaaminen",
+  "si.idle_minutes": "Pysäytä peliaika, kun olet poissa"
 }

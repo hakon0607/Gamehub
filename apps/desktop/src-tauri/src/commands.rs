@@ -531,8 +531,12 @@ pub struct ActivitySummary {
     pub today: DaySummary,
     /// Game id, when it was last played, and total seconds — newest first.
     pub recent: Vec<(String, String, u64)>,
-    /// The session currently in progress, if any.
+    /// The session currently in progress, if any. Its `seconds` are active
+    /// play so far; `wall_seconds` how long the game has been open.
     pub current: Option<Session>,
+    /// Whether the current session's game is being played right now, as
+    /// opposed to sitting in the background.
+    pub current_active: bool,
     pub tracking_enabled: bool,
 }
 
@@ -561,14 +565,17 @@ pub fn get_activity(state: State<'_, Arc<AppState>>) -> ActivitySummary {
         game_name: open.game_name.clone(),
         started_at: open.started_at.clone(),
         ended_at: gamehub_detect::now_iso8601(),
-        seconds: seconds_since(&open.started_at, now),
+        seconds: activity::active_so_far(open, now),
+        wall_seconds: seconds_since(&open.started_at, now),
     });
+    let current_active = inner.activity.open.first().map(|open| open.active).unwrap_or(false);
 
     ActivitySummary {
         streaks: activity::streaks(sessions, inner.activity.streak_threshold_minutes, now.date()),
         today,
         recent: activity::recently_played(sessions, 8),
         current,
+        current_active,
         tracking_enabled: inner.activity.tracking_enabled,
     }
 }

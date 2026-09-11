@@ -15,6 +15,8 @@ export interface Settings {
   scanIntervalMinutes: number;
   autoAddNewGames: boolean;
   trackActivity: boolean;
+  trackActiveOnly: boolean;
+  idleMinutes: number;
   streakThresholdMinutes: number;
   screenshotFolder: string;
   screenshotMonitor: number;
@@ -47,7 +49,10 @@ export interface Session {
   gameName: string;
   startedAt: string;
   endedAt: string;
+  /** Active play — the game in front, the player at the keyboard. */
   seconds: number;
+  /** How long the game was open in total. 0 on sessions from older versions. */
+  wallSeconds: number;
 }
 
 export interface DaySummary {
@@ -73,6 +78,8 @@ export interface ActivitySummary {
   /** Game id, when it was last played, total seconds. */
   recent: [string, string, number][];
   current: Session | null;
+  /** The current game is being played right now, not sitting in the background. */
+  currentActive: boolean;
   trackingEnabled: boolean;
 }
 

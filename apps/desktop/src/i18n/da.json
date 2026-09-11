@@ -833,5 +833,12 @@
   "be.wallpaper_com": "Windows' baggrundsbilledtjeneste svarede ikke: {0}",
   "be.wallpaper_desktop_failed": "Windows nægtede skrivebordsbilledet: {0}",
   "be.wallpaper_lock_failed": "Windows nægtede låseskærmsbilledet: {0}",
-  "be.wallpaper_windows_only": "Baggrundsbilleder kan kun sættes på Windows."
+  "be.wallpaper_windows_only": "Baggrundsbilleder kan kun sættes på Windows.",
+  "settings.active_only": "Tæl kun aktivt spil",
+  "settings.active_only_hint": "Tiden tæller, mens spillet er vinduet forrest. Alt-tab til Discord eller skrivebordet, så stopper uret. Et frosset spil tæller aldrig. Fra: et spil, der står åbent i baggrunden, tæller også.",
+  "settings.idle": "Sæt uret på pause uden input efter",
+  "settings.idle_hint": "Intet tastatur eller mus så længe, og uret stopper, til du er tilbage. En lang cutscene tæller stadig, hvis den er kortere end dette.",
+  "home.in_background": "pause — i baggrunden",
+  "si.active_only": "Tæl kun aktivt spil",
+  "si.idle_minutes": "Sæt spilletid på pause ved inaktivitet"
 }

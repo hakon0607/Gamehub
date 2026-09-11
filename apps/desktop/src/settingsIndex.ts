@@ -97,6 +97,8 @@ const ENTRIES: { id: string; category: SettingsCategory; keywords: string }[] = 
   { id: 'screenshot-folder', category: 'screenshots', keywords: 'folder screenshot pictures' },
   { id: 'extra-folders', category: 'folders', keywords: 'folder games local exe add' },
   { id: 'track-activity', category: 'privacy', keywords: 'privacy playtime streak calendar track' },
+  { id: 'active-only', category: 'privacy', keywords: 'playtime active foreground background alt-tab accurate count' },
+  { id: 'idle-minutes', category: 'privacy', keywords: 'idle afk inactivity pause playtime' },
   { id: 'streak-threshold', category: 'privacy', keywords: 'streak threshold minutes day' },
   { id: 'clipboard-enabled', category: 'privacy', keywords: 'clipboard history copy' },
   { id: 'clear-activity', category: 'privacy', keywords: 'delete clear history activity' },

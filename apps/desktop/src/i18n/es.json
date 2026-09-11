@@ -833,5 +833,12 @@
   "be.wallpaper_com": "El servicio de fondos de Windows no respondió: {0}",
   "be.wallpaper_desktop_failed": "Windows rechazó el fondo del escritorio: {0}",
   "be.wallpaper_lock_failed": "Windows rechazó la imagen de bloqueo: {0}",
-  "be.wallpaper_windows_only": "Los fondos solo pueden ponerse en Windows."
+  "be.wallpaper_windows_only": "Los fondos solo pueden ponerse en Windows.",
+  "settings.active_only": "Contar solo el juego activo",
+  "settings.active_only_hint": "El tiempo cuenta mientras el juego es la ventana en primer plano. Alt-Tab a Discord o al escritorio y el reloj se para. Un juego congelado nunca cuenta. Apagado: un juego abierto en segundo plano también cuenta.",
+  "settings.idle": "Pausar sin actividad tras",
+  "settings.idle_hint": "Sin teclado ni ratón durante este tiempo, y el reloj se para hasta que vuelvas. Una cinemática larga sigue contando si dura menos que esto.",
+  "home.in_background": "en pausa — en segundo plano",
+  "si.active_only": "Contar solo el juego activo",
+  "si.idle_minutes": "Pausar el tiempo de juego si estás ausente"
 }

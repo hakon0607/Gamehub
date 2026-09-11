@@ -833,5 +833,12 @@
   "be.wallpaper_com": "Windows bakgrundsbildstjänst svarade inte: {0}",
   "be.wallpaper_desktop_failed": "Windows vägrade skrivbordsbilden: {0}",
   "be.wallpaper_lock_failed": "Windows vägrade låsskärmsbilden: {0}",
-  "be.wallpaper_windows_only": "Bakgrundsbilder kan bara sättas på Windows."
+  "be.wallpaper_windows_only": "Bakgrundsbilder kan bara sättas på Windows.",
+  "settings.active_only": "Räkna bara aktivt spelande",
+  "settings.active_only_hint": "Tiden räknas medan spelet är fönstret längst fram. Alt-tabba till Discord eller skrivbordet så stannar klockan. Ett fryst spel räknas aldrig. Av: ett spel som står öppet i bakgrunden räknas också.",
+  "settings.idle": "Pausa utan input efter",
+  "settings.idle_hint": "Inget tangentbord eller mus så länge, och klockan stannar tills du är tillbaka. En lång mellansekvens räknas fortfarande om den är kortare än detta.",
+  "home.in_background": "pausad — i bakgrunden",
+  "si.active_only": "Räkna bara aktivt spelande",
+  "si.idle_minutes": "Pausa speltid vid inaktivitet"
 }

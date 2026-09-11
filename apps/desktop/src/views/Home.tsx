@@ -59,7 +59,10 @@ export function Home({
             <p className="big" style={{ fontSize: 22 }}>
               {current.gameName}
             </p>
-            <p className="sub">{t('home.this_session', { time: formatDuration(current.seconds) })}</p>
+            <p className="sub">
+              {t('home.this_session', { time: formatDuration(current.seconds) })}
+              {!frozenNow && !activity?.currentActive && <span className="badge-pill" style={{ marginLeft: 8 }}>{t('home.in_background')}</span>}
+            </p>
             <div className="row" style={{ marginTop: 12 }}>
               <button className="btn sm" onClick={() => onOpen(current.gameId)}>
                 {t('home.open_game')}

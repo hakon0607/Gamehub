@@ -833,5 +833,12 @@
   "be.wallpaper_com": "Windows' wallpaper service did not answer: {0}",
   "be.wallpaper_desktop_failed": "Windows refused the desktop wallpaper: {0}",
   "be.wallpaper_lock_failed": "Windows refused the lock screen picture: {0}",
-  "be.wallpaper_windows_only": "Wallpapers can only be set on Windows."
+  "be.wallpaper_windows_only": "Wallpapers can only be set on Windows.",
+  "settings.active_only": "Count only active play",
+  "settings.active_only_hint": "Time counts while the game is the window in front. Alt-tab to Discord or the desktop and the clock pauses. A frozen game never counts. Off, a game left open in the background counts too.",
+  "settings.idle": "Pause after no input for",
+  "settings.idle_hint": "No keyboard or mouse for this long and the clock pauses until you are back. A long cutscene still counts if you keep it under this.",
+  "home.in_background": "paused — in the background",
+  "si.active_only": "Count only active play",
+  "si.idle_minutes": "Pause playtime when idle"
 }

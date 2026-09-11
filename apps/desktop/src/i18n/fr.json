@@ -833,5 +833,12 @@
   "be.wallpaper_com": "Le service de fond d'écran de Windows n'a pas répondu : {0}",
   "be.wallpaper_desktop_failed": "Windows a refusé le fond d'écran du bureau : {0}",
   "be.wallpaper_lock_failed": "Windows a refusé l'image de verrouillage : {0}",
-  "be.wallpaper_windows_only": "Les fonds d'écran ne peuvent être définis que sous Windows."
+  "be.wallpaper_windows_only": "Les fonds d'écran ne peuvent être définis que sous Windows.",
+  "settings.active_only": "Compter seulement le jeu actif",
+  "settings.active_only_hint": "Le temps compte tant que le jeu est la fenêtre au premier plan. Alt-Tab vers Discord ou le bureau, et le chrono s'arrête. Un jeu figé ne compte jamais. Désactivé : un jeu laissé ouvert en arrière-plan compte aussi.",
+  "settings.idle": "Mettre en pause sans activité après",
+  "settings.idle_hint": "Ni clavier ni souris pendant ce temps, et le chrono s'arrête jusqu'à ton retour. Une longue cinématique compte quand même si elle est plus courte que ça.",
+  "home.in_background": "en pause — en arrière-plan",
+  "si.active_only": "Compter seulement le jeu actif",
+  "si.idle_minutes": "Pause du temps de jeu si inactif"
 }

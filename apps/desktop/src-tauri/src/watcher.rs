@@ -82,26 +82,32 @@ fn spawn_process_poll(app: AppHandle, state: Arc<AppState>) {
             if library.is_empty() {
                 continue;
             }
-            let running = watch.running_games(&library);
-
-            // Names travel with the ids so a session survives the game later
-            // being renamed or uninstalled.
-            let named: Vec<(String, String)> = running
-                .iter()
-                .filter_map(|id| {
-                    library
-                        .iter()
-                        .find(|g| &g.id == id)
-                        .map(|g| (g.id.clone(), g.name.clone()))
-                })
-                .collect();
+            let settings = state.settings();
+            let idle_limit = (settings.idle_minutes > 0).then(|| Duration::from_secs(settings.idle_minutes * 60));
+            let seen = watch.observe(&library, idle_limit);
+            let running: Vec<String> = seen.iter().map(|(id, _)| id.clone()).collect();
 
             let (changed, closed) = {
                 let mut inner = state.inner.lock();
+                // Names travel with the ids so a session survives the game
+                // later being renamed or uninstalled. A frozen game is never
+                // being played, whatever window is in front.
+                let named: Vec<gamehub_detect::activity::Running> = seen
+                    .iter()
+                    .filter_map(|(id, active)| {
+                        let game = library.iter().find(|g| &g.id == id)?;
+                        let frozen = gamehub_detect::freeze::active_for(&inner.freezes, id).is_some();
+                        Some(gamehub_detect::activity::Running {
+                            game_id: game.id.clone(),
+                            game_name: game.name.clone(),
+                            active: (*active || !settings.track_active_only) && !frozen,
+                        })
+                    })
+                    .collect();
                 let changed = inner.running != running;
                 inner.running = running.clone();
                 let now = time::OffsetDateTime::now_utc();
-                let closed = gamehub_detect::activity::observe(&mut inner.activity, &named, now);
+                let closed = gamehub_detect::activity::observe_active(&mut inner.activity, &named, now);
                 (changed, closed)
             };
 

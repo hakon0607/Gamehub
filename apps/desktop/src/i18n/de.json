@@ -833,5 +833,12 @@
   "be.wallpaper_com": "Der Hintergrundbild-Dienst von Windows hat nicht geantwortet: {0}",
   "be.wallpaper_desktop_failed": "Windows hat das Desktop-Hintergrundbild abgelehnt: {0}",
   "be.wallpaper_lock_failed": "Windows hat das Sperrbildschirm-Bild abgelehnt: {0}",
-  "be.wallpaper_windows_only": "Hintergrundbilder lassen sich nur unter Windows setzen."
+  "be.wallpaper_windows_only": "Hintergrundbilder lassen sich nur unter Windows setzen.",
+  "settings.active_only": "Nur aktives Spielen zählen",
+  "settings.active_only_hint": "Die Zeit läuft, solange das Spiel das vorderste Fenster ist. Alt-Tab zu Discord oder auf den Desktop, und die Uhr hält an. Ein eingefrorenes Spiel zählt nie. Aus: ein im Hintergrund offenes Spiel zählt ebenfalls.",
+  "settings.idle": "Uhr anhalten ohne Eingabe nach",
+  "settings.idle_hint": "So lange keine Tastatur oder Maus, und die Uhr hält an, bis du zurück bist. Eine lange Zwischensequenz zählt trotzdem, wenn sie kürzer ist.",
+  "home.in_background": "pausiert — im Hintergrund",
+  "si.active_only": "Nur aktives Spielen zählen",
+  "si.idle_minutes": "Spielzeit bei Inaktivität anhalten"
 }

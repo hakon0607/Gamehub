@@ -67,6 +67,11 @@ pub struct Settings {
     pub minimise_to_tray: bool,
     pub scan_interval_minutes: u64,
     pub auto_add_new_games: bool,
+    /// Playtime counts only while the game is the window in front. Off, a
+    /// game left open in the background counts too (how it used to be).
+    pub track_active_only: bool,
+    /// Minutes without keyboard or mouse before the clock pauses. 0 = never.
+    pub idle_minutes: u64,
     /// Privacy: when false, no playtime, streak or calendar data is recorded.
     /// Launching games is unaffected.
     pub track_activity: bool,
@@ -117,6 +122,8 @@ impl Default for Settings {
             // launchers that write their manifests somewhere unwatched.
             scan_interval_minutes: 15,
             auto_add_new_games: true,
+            track_active_only: true,
+            idle_minutes: 10,
             track_activity: true,
             streak_threshold_minutes: 15,
             screenshot_folder: String::new(),
