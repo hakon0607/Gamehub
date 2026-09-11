@@ -102,7 +102,7 @@ const settings = {
   streakThresholdMinutes: 15, screenshotFolder: '', screenshotMonitor: 0, clipboardEnabled: true, accent: '', density: 'comfortable',
   backgroundImage: '', replay: { enabled: true, bufferSeconds: 120, fps: 60, quality: 'medium', monitor: 0, systemAudio: true, audioDevice: '', folder: '', scaleHeight: 1080, saveSeconds: 30, encoder: 'auto' },
   extraGameFolders: ['D:\\Spill'], metadata: { igdbClientId: '', igdbClientSecret: '', steamGridDbKey: '' }, ai: { enabled: false, provider: 'gemini', apiKey: '', model: '' },
-  cloud: { enabled: false, apiUrl: '' }, language: 'en', languageChosen: false, theme: 'nattbla', onboarded: true, dismissedUpdateVersion: null,
+  cloud: { enabled: false, apiUrl: '' }, language: 'en', languageChosen: false, overlayPopup: true, overlaySound: true, startupAnimation: true, startupSound: true, theme: 'nattbla', onboarded: true, dismissedUpdateVersion: null,
 };
 
 const now = new Date().toISOString();
@@ -116,6 +116,8 @@ const answers = {
   get_library: () => games,
   get_running_games: () => ['steam:1'],
   get_settings: () => settings,
+  // The tour itself starts quietly; the opening is captured on its own below.
+  startup_greeting: () => ({ animation: false, sound: false }),
   save_settings: (a) => Object.assign(settings, a.settings),
   get_activity: () => ({
     streaks: { current: 6, longest: 14, totalDays: 88, totalSeconds: 412_000, currentStreakGames: ['Rainbow Six Siege', 'Forza Horizon 5', 'Fortnite'], bestMonth: ['2026-07', 98_000] },
@@ -286,6 +288,39 @@ await popup.evaluate(() => {
 await popup.waitForTimeout(500);
 await popup.screenshot({ path: join(out, '30-popup.png') });
 console.log('  30-popup.png');
+// The opening: the logo animation, frame by frame, on a fresh page that
+// answers "yes" to the greeting. Time is driven by hand, because a full
+// screenshot takes longer than the animation gives it.
+const opening = await browser.newPage({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 1 });
+await opening.addInitScript(mock);
+await opening.addInitScript(`window.__ANSWERS__ = {}; window.__ANSWERS_SRC__ = ${JSON.stringify(Object.fromEntries(Object.entries(answers).map(([k, v]) => [k, v.toString()])))};`);
+await opening.addInitScript(`
+  const now = ${JSON.stringify(now)};
+  const games = ${JSON.stringify(games)};
+  const settings = ${JSON.stringify({ ...settings, languageChosen: true })};
+  const freezes = ${JSON.stringify(freezes)};
+  const frame = ${frame.toString()};
+  for (const [k, src] of Object.entries(window.__ANSWERS_SRC__)) window.__ANSWERS__[k] = eval('(' + src + ')');
+  window.__ANSWERS__.get_settings = () => settings;
+  window.__ANSWERS__.startup_greeting = () => ({ animation: true, sound: true });
+`);
+await opening.clock.install();
+await opening.goto(`http://localhost:${port}/`);
+await opening.waitForSelector('.splash-playing');
+await opening.clock.pauseAt(await opening.evaluate(() => Date.now()));
+let at = 0;
+for (const [i, ms] of [150, 450, 800, 1200, 1500, 1750].entries()) {
+  await opening.clock.runFor(ms - at);
+  at = ms;
+  await opening.waitForTimeout(80);
+  await opening.screenshot({ path: join(out, `40-opening-${i}.png`) });
+  console.log(`  40-opening-${i}.png  (${ms} ms)`);
+}
+await opening.clock.runFor(1000);
+await opening.waitForSelector('.splash', { state: 'detached' });
+await opening.screenshot({ path: join(out, '40-opening-done.png') });
+console.log('  40-opening-done.png');
+
 await browser.close();
 server.close();
 console.log(`\nscreenshots in ${out}`);
