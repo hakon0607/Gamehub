@@ -11,7 +11,7 @@ import { t } from './i18n';
  * Started into the tray, reloaded, or switched off in Settings, the backend
  * answers "no" and the curtain lifts at once — nothing flashes.
  */
-const SHOW_MS = 1500;
+const SHOW_MS = 2500;
 const LIFT_MS = 500;
 
 /** How long the whole thing takes, for anyone scheduling around it. */
