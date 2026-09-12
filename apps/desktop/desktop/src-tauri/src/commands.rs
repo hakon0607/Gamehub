@@ -1717,6 +1717,27 @@ pub fn decide_greeting(settings: &Settings, first_ask: bool, started_in_tray: bo
     StartupGreeting { animation: settings.startup_animation, sound: settings.startup_sound }
 }
 
+/// Brings the main window to the front — from the tray menu, the global
+/// shortcut, or a second launch — and, when it was hidden until now, plays
+/// the opening again. To the person it is "opening GameHub" either way.
+pub fn open_main(app: &AppHandle) {
+    let Some(window) = app.get_webview_window("main") else { return };
+    let was_hidden = !window.is_visible().unwrap_or(true) || window.is_minimized().unwrap_or(false);
+    let _ = window.show();
+    let _ = window.unminimize();
+    let _ = window.set_focus();
+    if was_hidden {
+        let state = app.state::<Arc<AppState>>().inner().clone();
+        let greeting = decide_greeting(&state.settings(), true, false);
+        if greeting.sound {
+            crate::overlay::play_startup_sound();
+        }
+        if greeting.animation {
+            let _ = app.emit("opening", greeting);
+        }
+    }
+}
+
 #[tauri::command]
 pub fn startup_greeting(state: State<'_, Arc<AppState>>) -> StartupGreeting {
     use std::sync::atomic::{AtomicBool, Ordering};

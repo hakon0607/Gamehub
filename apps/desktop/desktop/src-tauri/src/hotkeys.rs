@@ -119,11 +119,7 @@ fn handle(app: &AppHandle, action: Action) {
 }
 
 fn show_main(app: &AppHandle) {
-    if let Some(window) = app.get_webview_window("main") {
-        let _ = window.show();
-        let _ = window.unminimize();
-        let _ = window.set_focus();
-    }
+    crate::commands::open_main(app);
 }
 
 /// Watches the clipboard.

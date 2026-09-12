@@ -2707,6 +2707,20 @@ html.overlay-window #root {
   width: 160px;
 }
 
+/* brought back from the tray: the curtain fades in over the app first */
+.splash-again.splash-playing {
+  animation: splash-drop 0.25s ease-out both;
+}
+
+@keyframes splash-drop {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 @keyframes splash-glow {
   to {
     opacity: 1;

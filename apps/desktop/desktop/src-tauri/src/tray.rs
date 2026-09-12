@@ -53,12 +53,7 @@ pub fn build(app: &AppHandle, language: &str) -> tauri::Result<()> {
         .menu(&menu(app, language)?)
         .show_menu_on_left_click(false)
         .on_menu_event(|app, event| match event.id.as_ref() {
-            "open" => {
-                if let Some(window) = app.get_webview_window("main") {
-                    let _ = window.show();
-                    let _ = window.set_focus();
-                }
-            }
+            "open" => crate::commands::open_main(app),
             "scan" => {
                 let handle = app.clone();
                 let state = app.state::<Arc<AppState>>().inner().clone();

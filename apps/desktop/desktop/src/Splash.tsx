@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { listen } from '@tauri-apps/api/event';
 import { api } from './api';
 import { t } from './i18n';
 
@@ -26,6 +27,8 @@ const greet = () => (asked ??= api.startupGreeting());
 
 export function Splash() {
   const [phase, setPhase] = useState<Phase>('pending');
+  // A replay fades the curtain in over the app; the first one is simply there.
+  const [again, setAgain] = useState(false);
   // The saved language arrives a moment after the first paint; follow it.
   const [, setLang] = useState(0);
   useEffect(() => {
@@ -37,29 +40,36 @@ export function Splash() {
   useEffect(() => {
     let cancelled = false;
     const timers: number[] = [];
+    const play = (replay = false) => {
+      setAgain(replay);
+      timers.forEach((id) => window.clearTimeout(id));
+      timers.length = 0;
+      setPhase('playing');
+      timers.push(window.setTimeout(() => setPhase('lifting'), SHOW_MS));
+      timers.push(window.setTimeout(() => setPhase('done'), SHOW_MS + LIFT_MS));
+    };
     void greet()
       .then((greeting) => {
         if (cancelled) return;
-        if (!greeting?.animation) {
-          setPhase('done');
-          return;
-        }
-        setPhase('playing');
-        timers.push(window.setTimeout(() => setPhase('lifting'), SHOW_MS));
-        timers.push(window.setTimeout(() => setPhase('done'), SHOW_MS + LIFT_MS));
+        if (greeting?.animation) play();
+        else setPhase('done');
       })
       // A backend that cannot answer must never leave a black curtain up.
       .catch(() => !cancelled && setPhase('done'));
+    // Brought back from the tray, the shortcut or a second launch: the
+    // backend says so, and the opening plays again over the loaded app.
+    const unlisten = listen('opening', () => !cancelled && play(true));
     return () => {
       cancelled = true;
       timers.forEach((id) => window.clearTimeout(id));
+      void unlisten.then((off) => off());
     };
   }, []);
 
   if (phase === 'done') return null;
 
   return (
-    <div className={`splash splash-${phase}`} aria-hidden="true" data-testid="splash">
+    <div className={`splash splash-${phase}${again ? ' splash-again' : ''}`} aria-hidden="true" data-testid="splash">
       <div className="splash-glow" />
       <div className="splash-stage">
         <div className="splash-mark">
