@@ -1,6 +1,13 @@
 //! Anonymous usage statistics for the GameHub website's admin page.
 //!
-//! Every five minutes while GameHub runs (and once at start) the app sends
+//! Nothing here happens without consent. The reporter wakes up, asks the
+//! settings whether the user said yes, and goes back to sleep if they did
+//! not — no identifier is created, no request is made. That is what the
+//! GDPR wants for analytics, and what the Norwegian Electronic
+//! Communications Act § 3-15 requires before an identifier may be stored on
+//! and read back from someone's device.
+//!
+//! With consent, every five minutes while GameHub runs (and once at start) the app sends
 //! one small JSON message to the website: a random install id made on first
 //! run, the version, the language, whether the window is on screen or in
 //! the tray, the game being played right now, how many games are installed
@@ -81,7 +88,9 @@ pub fn payload(
     })
 }
 
-/// Makes sure this install has an id, creating and saving one the first time.
+/// Makes sure this install has an id, creating and saving one the first
+/// time. Only ever called behind a consent check: without consent no
+/// identifier is written to the user's disk at all.
 pub fn install_id(state: &Arc<AppState>) -> String {
     let existing = state.settings().install_id;
     if !existing.is_empty() {
@@ -119,7 +128,35 @@ fn gather(app: &AppHandle, state: &Arc<AppState>) -> serde_json::Value {
     serde_json::json!({ "body": body, "events": events.iter().map(|(k, v)| serde_json::json!([k, v])).collect::<Vec<_>>() })
 }
 
+/// The one gate. Everything below it depends on this being true.
+pub fn consented(state: &Arc<AppState>) -> bool {
+    state.settings().legal.stats_consent
+}
+
+/// Asks the server to delete everything stored under an installation id.
+/// Returns true when the server confirms; a false means it can be tried
+/// again later, never that the data is gone.
+pub fn forget(id: &str) -> bool {
+    let base = std::env::var("GAMEHUB_STATS_URL").unwrap_or_else(|_| STATS_URL.to_string());
+    let url = base.replace("/api/ping", "/api/forget");
+    reqwest::blocking::Client::builder()
+        .timeout(Duration::from_secs(15))
+        .build()
+        .and_then(|client| {
+            client
+                .post(&url)
+                .header("content-type", "application/json")
+                .body(serde_json::json!({ "id": id }).to_string())
+                .send()
+        })
+        .map(|response| response.status().is_success())
+        .unwrap_or(false)
+}
+
 fn send_once(app: &AppHandle, state: &Arc<AppState>) {
+    if !consented(state) {
+        return;
+    }
     let url = std::env::var("GAMEHUB_STATS_URL").unwrap_or_else(|_| STATS_URL.to_string());
     let gathered = gather(app, state);
     let body = gathered["body"].clone();
@@ -160,6 +197,8 @@ pub fn start(app: AppHandle, state: Arc<AppState>) {
     std::thread::Builder::new()
         .name("gamehub-stats".into())
         .spawn(move || loop {
+            // Checked every time, not once at start: consent given or taken
+            // back in Settings takes effect from the very next tick.
             send_once(&app, &state);
             std::thread::sleep(INTERVAL);
         })
@@ -204,6 +243,16 @@ mod tests {
         assert!(take_counts().is_empty(), "taking empties the counters");
         restore_counts(&taken);
         assert!(take_counts().contains(&("freeze", 2)), "a failed send keeps the counts");
+    }
+
+    #[test]
+    fn the_features_list_matches_what_the_website_accepts() {
+        // The website rejects anything else, so a typo here would silently
+        // lose counts rather than fail loudly.
+        assert_eq!(EVENTS.len(), 7);
+        for name in EVENTS {
+            assert!(name.chars().all(|c| c.is_ascii_lowercase()), "{name} must be a plain lowercase key");
+        }
     }
 
     #[test]

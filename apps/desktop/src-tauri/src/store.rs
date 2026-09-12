@@ -115,7 +115,11 @@ pub struct Settings {
     /// tray — closing with X is "closing GameHub" to most people.
     pub startup_on_reopen: bool,
     /// Random id made on first run, for the anonymous usage statistics.
+    /// Only created once consent exists, and cleared again when it is
+    /// withdrawn with "delete my statistics data".
     pub install_id: String,
+    /// Terms accepted and consent given, with versions and timestamps.
+    pub legal: crate::legal::LegalSettings,
     /// Desktop background and lock screen picture GameHub set for Windows.
     pub wallpapers: crate::wallpaper::WallpaperSettings,
     pub theme: String,
@@ -158,6 +162,7 @@ impl Default for Settings {
             startup_sound: true,
             startup_on_reopen: true,
             install_id: String::new(),
+            legal: crate::legal::LegalSettings::default(),
             wallpapers: crate::wallpaper::WallpaperSettings::default(),
             theme: "nattbla".into(),
             onboarded: false,

@@ -17,6 +17,7 @@ mod replay;
 mod autostart;
 mod commands;
 mod launch;
+mod legal;
 mod msg;
 mod overlay;
 mod telemetry;
@@ -243,6 +244,12 @@ pub fn run() {
             commands::forget_wallpaper,
             commands::default_wallpaper,
             commands::startup_greeting,
+            legal::legal_status,
+            legal::accept_terms,
+            legal::set_stats_consent,
+            legal::forget_statistics,
+            legal::export_my_data,
+            legal::delete_local_data,
         ])
         .run(tauri::generate_context!())
         .expect("GameHub failed to start");
