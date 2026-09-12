@@ -1,6 +1,6 @@
-# GameHub 1.8 — åpningsanimasjon med lyd
+# GameHub 1.8.1 — åpningsanimasjon med lyd
 
-## Hva som er nytt i 1.8
+## Hva som er nytt i 1.8.1
 
 **Åpningsanimasjon.** Når GameHub åpner på skjermen kommer logoen først:
 mørk bakgrunn, et mykt lys som vokser, logomerket som tegnes inn, «GameHub»
@@ -10,17 +10,18 @@ tar rundt to sekunder. Sammen med animasjonen spilles en kort, myk klang
 (tre stigende toner) — lyden ligger i `GameHub-startup-sound.mp3` så du kan
 høre den før du bygger.
 
-**Hver gang du åpner den.** GameHub ligger som regel og kjører i
-systemkurven (ved klokka) hele tiden, så «å åpne GameHub» betyr i praksis
-å hente vinduet fram igjen — fra ikonet ved klokka, med hurtigtasten «Åpne
-GameHub», eller ved å trykke på GameHub i Start-menyen mens den allerede
-kjører. Åpningen spilles i alle disse tilfellene, over den ferdig lastede
-appen. Den spilles derimot ikke når GameHub starter skjult sammen med
-Windows — da er det ingen på skjermen å hilse på.
+**Når den kommer — og når den ikke kommer.** Åpningen spilles når
+GameHub starter, og når vinduet hentes fram igjen etter at du har lukket
+det med X (da ligger det i systemkurven, og for deg er det «lukket»). Den
+kommer *ikke* når du bare minimerer til oppgavelinjen og henter det opp
+igjen — det er ikke å åpne noe. Og aldri når GameHub starter skjult sammen
+med Windows, for da er det ingen på skjermen å hilse på.
 
-**Slå av.** Innstillinger → Utseende → «Når GameHub åpner» har to brytere:
-*Åpningsanimasjon* og *Åpningslyd*. De er uavhengige, så du kan ha
-animasjonen uten lyd.
+**Slå av.** Innstillinger → Utseende → «Når GameHub åpner» har tre brytere:
+*Åpningsanimasjon*, *Åpningslyd* og *Også når den hentes fram fra
+systemkurven*. Slår du av den siste, kommer åpningen bare når selve
+programmet starter. Ser du ingen animasjon i det hele tatt: sjekk at den
+første bryteren står på.
 
 ## Slik er det bygget
 
@@ -45,11 +46,11 @@ ser aldri på dem. Slett dem slik: klikk på `desktop` på forsiden → klikk
 på en hvilken som helst fil → trykk de tre prikkene `···` oppe til høyre
 → **Delete directory** → **Commit changes**. Gjør det samme med `web`.
 
-Så selve opplastingen. `gamehubv25.zip` inneholder alt. GitHub tar imot
+Så selve opplastingen. `gamehubv26.zip` inneholder alt. GitHub tar imot
 maks 100 filer per opplasting, og `apps`-mappen alene er 105 filer —
 derfor tre runder:
 
-1. Pakk ut `gamehubv25.zip`. Gjør skjulte filer synlige (Del 2 i
+1. Pakk ut `gamehubv26.zip`. Gjør skjulte filer synlige (Del 2 i
    `OPPSKRIFT.md`). Åpne `gamehub`-mappen på PC-en.
 2. **Runde 1 (75 filer):** merk ALT i `gamehub`-mappen **unntatt**
    `apps`-mappen og dra det inn på forsiden av
@@ -68,10 +69,10 @@ derfor tre runder:
 5. Gå til **Actions**-fanen. Fordi byggingen startet i runde 2, før
    `src` var på plass, må den kjøres én gang til: klikk **Release** i
    lista til venstre → **Run workflow** → huk av **force** → **Run
-   workflow**. Den bygger nå 1.8.0 med alt.
+   workflow**. Den bygger nå 1.8.1 med alt.
 
 Sjekk at det gikk riktig: `apps/desktop/src/Splash.tsx` skal finnes på
-GitHub, og `apps/desktop/src-tauri/tauri.conf.json` skal si `"1.8.0"`.
+GitHub, og `apps/desktop/src-tauri/tauri.conf.json` skal si `"1.8.1"`.
 
 ## Hva som var nytt i 1.6
 

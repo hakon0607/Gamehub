@@ -102,7 +102,7 @@ const settings = {
   streakThresholdMinutes: 15, screenshotFolder: '', screenshotMonitor: 0, clipboardEnabled: true, accent: '', density: 'comfortable',
   backgroundImage: '', replay: { enabled: true, bufferSeconds: 120, fps: 60, quality: 'medium', monitor: 0, systemAudio: true, audioDevice: '', folder: '', scaleHeight: 1080, saveSeconds: 30, encoder: 'auto' },
   extraGameFolders: ['D:\\Spill'], metadata: { igdbClientId: '', igdbClientSecret: '', steamGridDbKey: '' }, ai: { enabled: false, provider: 'gemini', apiKey: '', model: '' },
-  cloud: { enabled: false, apiUrl: '' }, language: 'en', languageChosen: false, overlayPopup: true, overlaySound: true, startupAnimation: true, startupSound: true, theme: 'nattbla', onboarded: true, dismissedUpdateVersion: null,
+  cloud: { enabled: false, apiUrl: '' }, language: 'en', languageChosen: false, overlayPopup: true, overlaySound: true, startupAnimation: true, startupSound: true, startupOnReopen: true, theme: 'nattbla', onboarded: true, dismissedUpdateVersion: null,
 };
 
 const now = new Date().toISOString();
