@@ -35,6 +35,11 @@ export interface Settings {
   languageChosen: boolean;
   overlayPopup: boolean;
   overlaySound: boolean;
+  /** The logo animation and chime when GameHub opens on screen. */
+  startupAnimation: boolean;
+  startupSound: boolean;
+  /** Also when the window comes back from the tray. */
+  startupOnReopen: boolean;
   wallpapers: { desktop: string; lock: string; monitors: Record<string, string> };
   theme: string;
   onboarded: boolean;
@@ -415,6 +420,8 @@ export const api = {
   // Freeze points.
   freezeStatus: () => invoke<FreezeStatus>('freeze_status'),
   wallpaperStatus: () => invoke<WallpaperStatus>('wallpaper_status'),
+  /** Asked once when the window first appears; the backend plays the chime itself. */
+  startupGreeting: () => invoke<{ animation: boolean; sound: boolean }>('startup_greeting'),
   setWallpaper: (target: WallpaperTarget, path: string, monitor?: string) =>
     invoke<WallpaperStatus>('set_wallpaper', { target, path, monitor: monitor ?? null }),
   forgetWallpaper: (target: WallpaperTarget, monitor?: string) =>

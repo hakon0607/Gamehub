@@ -854,5 +854,16 @@
   "replay.trim_failed": "Klip nie został przycięty",
   "sc.remove": "Usuń",
   "sc.remove_hint": "Bez klawisza — akcja dostępna tylko w aplikacji. Backspace podczas nasłuchiwania robi to samo.",
-  "be.trim_too_short": "Klip musi trwać co najmniej sekundę."
+  "be.trim_too_short": "Klip musi trwać co najmniej sekundę.",
+  "settings.g_opening": "Gdy GameHub się otwiera",
+  "settings.startup_animation": "Animacja otwarcia",
+  "settings.startup_animation_hint": "Krótka animacja logo w chwili pojawienia się okna. Pomijana, gdy GameHub startuje ukryty w zasobniku.",
+  "settings.startup_sound": "Dźwięk otwarcia",
+  "settings.startup_sound_hint": "Delikatny dźwięk razem z animacją.",
+  "si.startup_animation": "Animacja otwarcia",
+  "si.startup_sound": "Dźwięk otwarcia",
+  "splash.tagline": "Twoje gry. Jedno miejsce.",
+  "settings.startup_on_reopen": "Także po przywróceniu z zasobnika",
+  "settings.startup_on_reopen_hint": "Odtwarzaj otwarcie za każdym razem, gdy okno wraca z zasobnika lub po skrócie — nie tylko przy starcie GameHub.",
+  "si.startup_on_reopen": "Otwarcie przy ponownym otwarciu"
 }

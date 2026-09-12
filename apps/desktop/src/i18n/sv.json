@@ -854,5 +854,16 @@
   "replay.trim_failed": "Klippet kortades inte ned",
   "sc.remove": "Ta bort",
   "sc.remove_hint": "Ingen tangent alls — åtgärden nås bara inne i appen. Backsteg medan den lyssnar gör samma sak.",
-  "be.trim_too_short": "Ett klipp måste vara minst en sekund långt."
+  "be.trim_too_short": "Ett klipp måste vara minst en sekund långt.",
+  "settings.g_opening": "När GameHub öppnas",
+  "settings.startup_animation": "Öppningsanimation",
+  "settings.startup_animation_hint": "En kort logoanimation i samma stund som fönstret visas. Hoppas över när GameHub startar dolt i aktivitetsfältet.",
+  "settings.startup_sound": "Öppningsljud",
+  "settings.startup_sound_hint": "En mjuk klang tillsammans med animationen.",
+  "si.startup_animation": "Öppningsanimation",
+  "si.startup_sound": "Öppningsljud",
+  "splash.tagline": "Dina spel. Ett ställe.",
+  "settings.startup_on_reopen": "Även när den hämtas fram från aktivitetsfältet",
+  "settings.startup_on_reopen_hint": "Spela öppningen varje gång fönstret hämtas fram från aktivitetsfältet eller med genvägen — inte bara när GameHub startar.",
+  "si.startup_on_reopen": "Öppning vid återöppning"
 }

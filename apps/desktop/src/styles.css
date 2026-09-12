@@ -2576,3 +2576,194 @@ html.overlay-window #root {
 .trim-bar { position: relative; height: 22px; border-radius: 11px; background: rgba(255,255,255,0.08); cursor: pointer; overflow: hidden; }
 .trim-range { position: absolute; top: 0; bottom: 0; background: color-mix(in srgb, var(--accent) 55%, transparent); border-left: 2px solid var(--accent); border-right: 2px solid var(--accent); }
 .trim-head { position: absolute; top: 0; bottom: 0; width: 3px; background: #fff; box-shadow: 0 0 8px #fff; }
+
+/* --------------------------------------------------------------- splash */
+
+/* The opening curtain. Above everything, and up before the first paint so
+   the app never shows half-loaded underneath it. */
+.splash {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: var(--bg-deep);
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.splash-glow {
+  position: absolute;
+  width: 70vmax;
+  height: 70vmax;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--glow-soft) 0%, transparent 60%);
+  opacity: 0;
+  transform: scale(0.6);
+}
+
+.splash-stage {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 18px;
+}
+
+.splash-mark {
+  width: 84px;
+  height: 84px;
+  display: grid;
+  place-items: center;
+  border-radius: 24px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  color: var(--accent-ink);
+  font-size: 40px;
+  box-shadow: 0 18px 50px var(--glow-soft), 0 0 0 1px rgba(255, 255, 255, 0.06) inset;
+  opacity: 0;
+  transform: scale(0.72);
+}
+
+.splash-mark span {
+  display: block;
+  transform: rotate(-90deg);
+}
+
+.splash-word {
+  font-size: 34px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  color: var(--ink);
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.splash-line {
+  width: 0;
+  height: 2px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, transparent, var(--accent-2), transparent);
+  opacity: 0;
+}
+
+.splash-tag {
+  font-size: 13px;
+  letter-spacing: 2.6px;
+  text-transform: uppercase;
+  color: var(--muted);
+  opacity: 0;
+  transform: translateY(6px);
+}
+
+/* pending: curtain only, nothing moves until the backend answers. */
+
+.splash-playing .splash-glow {
+  animation: splash-glow 1.5s cubic-bezier(0.2, 0.7, 0.2, 1) forwards;
+}
+
+.splash-playing .splash-mark {
+  animation: splash-mark 0.9s cubic-bezier(0.2, 0.9, 0.25, 1.15) forwards;
+}
+
+.splash-playing .splash-mark span {
+  animation: splash-spin 0.9s cubic-bezier(0.2, 0.9, 0.25, 1) forwards;
+}
+
+.splash-playing .splash-word {
+  animation: splash-rise 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) 0.28s forwards;
+}
+
+.splash-playing .splash-line {
+  animation: splash-line 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) 0.5s forwards;
+}
+
+.splash-playing .splash-tag {
+  animation: splash-rise 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) 0.7s forwards;
+}
+
+/* lifting: everything is already in place; the curtain fades and the
+   contents drift up a touch so the app appears to come forward. */
+.splash-lifting {
+  animation: splash-lift 0.5s ease-in forwards;
+}
+
+.splash-lifting .splash-glow {
+  opacity: 1;
+}
+
+.splash-lifting .splash-mark,
+.splash-lifting .splash-word,
+.splash-lifting .splash-tag {
+  opacity: 1;
+  transform: none;
+  animation: splash-away 0.5s ease-in forwards;
+}
+
+.splash-lifting .splash-mark span {
+  transform: none;
+}
+
+.splash-lifting .splash-line {
+  opacity: 1;
+  width: 160px;
+}
+
+/* brought back from the tray: the curtain fades in over the app first */
+.splash-again.splash-playing {
+  animation: splash-drop 0.25s ease-out both;
+}
+
+@keyframes splash-drop {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes splash-glow {
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes splash-mark {
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes splash-spin {
+  to {
+    transform: rotate(0deg);
+  }
+}
+
+@keyframes splash-rise {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes splash-line {
+  to {
+    opacity: 1;
+    width: 160px;
+  }
+}
+
+@keyframes splash-lift {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes splash-away {
+  to {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.98);
+  }
+}

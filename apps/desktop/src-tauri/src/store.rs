@@ -108,6 +108,12 @@ pub struct Settings {
     /// GameHub is hidden, and whether it plings.
     pub overlay_popup: bool,
     pub overlay_sound: bool,
+    /// The short logo animation and chime when GameHub opens on screen.
+    pub startup_animation: bool,
+    pub startup_sound: bool,
+    /// Also play it when the window comes back after being closed to the
+    /// tray — closing with X is "closing GameHub" to most people.
+    pub startup_on_reopen: bool,
     /// Desktop background and lock screen picture GameHub set for Windows.
     pub wallpapers: crate::wallpaper::WallpaperSettings,
     pub theme: String,
@@ -146,6 +152,9 @@ impl Default for Settings {
             language_chosen: false,
             overlay_popup: true,
             overlay_sound: true,
+            startup_animation: true,
+            startup_sound: true,
+            startup_on_reopen: true,
             wallpapers: crate::wallpaper::WallpaperSettings::default(),
             theme: "nattbla".into(),
             onboarded: false,

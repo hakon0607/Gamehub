@@ -854,5 +854,16 @@
   "replay.trim_failed": "Der Clip wurde nicht zugeschnitten",
   "sc.remove": "Entfernen",
   "sc.remove_hint": "Gar keine Taste — die Aktion ist nur in der App erreichbar. Rücktaste beim Abhören macht dasselbe.",
-  "be.trim_too_short": "Ein Clip muss mindestens eine Sekunde lang sein."
+  "be.trim_too_short": "Ein Clip muss mindestens eine Sekunde lang sein.",
+  "settings.g_opening": "Wenn GameHub sich öffnet",
+  "settings.startup_animation": "Startanimation",
+  "settings.startup_animation_hint": "Eine kurze Logo-Animation, sobald das Fenster erscheint. Entfällt, wenn GameHub versteckt im Infobereich startet.",
+  "settings.startup_sound": "Startklang",
+  "settings.startup_sound_hint": "Ein sanfter Klang zur Animation.",
+  "si.startup_animation": "Startanimation",
+  "si.startup_sound": "Startklang",
+  "splash.tagline": "Deine Spiele. Ein Ort.",
+  "settings.startup_on_reopen": "Auch beim Zurückholen aus dem Infobereich",
+  "settings.startup_on_reopen_hint": "Die Eröffnung jedes Mal abspielen, wenn das Fenster aus dem Infobereich oder per Tastenkürzel zurückkommt — nicht nur beim Start von GameHub.",
+  "si.startup_on_reopen": "Eröffnung beim erneuten Öffnen"
 }

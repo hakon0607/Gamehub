@@ -38,10 +38,7 @@ pub fn run() {
         // One instance only: a second launch focuses the running window rather
         // than starting a second scanner over the same files.
         .plugin(tauri_plugin_single_instance::init(|app, _argv, _cwd| {
-            if let Some(window) = app.get_webview_window("main") {
-                let _ = window.show();
-                let _ = window.set_focus();
-            }
+            commands::open_main(app);
         }))
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
@@ -241,6 +238,7 @@ pub fn run() {
             commands::set_wallpaper,
             commands::forget_wallpaper,
             commands::default_wallpaper,
+            commands::startup_greeting,
         ])
         .run(tauri::generate_context!())
         .expect("GameHub failed to start");

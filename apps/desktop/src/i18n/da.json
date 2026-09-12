@@ -854,5 +854,16 @@
   "replay.trim_failed": "Klippet blev ikke kortet ned",
   "sc.remove": "Fjern",
   "sc.remove_hint": "Ingen tast overhovedet — handlingen nås kun inde i appen. Backspace, mens den lytter, gør det samme.",
-  "be.trim_too_short": "Et klip skal være mindst ét sekund langt."
+  "be.trim_too_short": "Et klip skal være mindst ét sekund langt.",
+  "settings.g_opening": "Når GameHub åbner",
+  "settings.startup_animation": "Åbningsanimation",
+  "settings.startup_animation_hint": "En kort logoanimation i det øjeblik vinduet vises. Springes over når GameHub starter skjult i proceslinjen.",
+  "settings.startup_sound": "Åbningslyd",
+  "settings.startup_sound_hint": "En blød klang sammen med animationen.",
+  "si.startup_animation": "Åbningsanimation",
+  "si.startup_sound": "Åbningslyd",
+  "splash.tagline": "Dine spil. Ét sted.",
+  "settings.startup_on_reopen": "Også når den hentes frem fra proceslinjen",
+  "settings.startup_on_reopen_hint": "Afspil åbningen hver gang vinduet hentes frem fra proceslinjen eller med genvejen — ikke kun når GameHub starter.",
+  "si.startup_on_reopen": "Åbning ved genåbning"
 }

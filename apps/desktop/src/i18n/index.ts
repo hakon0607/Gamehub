@@ -45,6 +45,8 @@ let current = LANGUAGES[0]!;
 export function setLanguage(code: string): void {
   current = LANGUAGES.find((l) => l.code === code) ?? LANGUAGES[0]!;
   if (typeof document !== 'undefined') document.documentElement.lang = current.code;
+  // Anything rendered outside <App /> (the opening splash) re-reads its text on this.
+  if (typeof window !== 'undefined') window.dispatchEvent(new Event('language-changed'));
 }
 
 export function currentLanguage(): string {

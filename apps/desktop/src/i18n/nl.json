@@ -854,5 +854,16 @@
   "replay.trim_failed": "De clip is niet bijgesneden",
   "sc.remove": "Verwijderen",
   "sc.remove_hint": "Helemaal geen toets — de actie is alleen in de app bereikbaar. Backspace tijdens het luisteren doet hetzelfde.",
-  "be.trim_too_short": "Een clip moet minstens één seconde duren."
+  "be.trim_too_short": "Een clip moet minstens één seconde duren.",
+  "settings.g_opening": "Wanneer GameHub opent",
+  "settings.startup_animation": "Openingsanimatie",
+  "settings.startup_animation_hint": "Een korte logo-animatie zodra het venster verschijnt. Overgeslagen wanneer GameHub verborgen in het systeemvak start.",
+  "settings.startup_sound": "Openingsgeluid",
+  "settings.startup_sound_hint": "Een zachte klank bij de animatie.",
+  "si.startup_animation": "Openingsanimatie",
+  "si.startup_sound": "Openingsgeluid",
+  "splash.tagline": "Jouw games. Eén plek.",
+  "settings.startup_on_reopen": "Ook bij terughalen uit het systeemvak",
+  "settings.startup_on_reopen_hint": "Speel de opening elke keer af wanneer het venster terugkomt uit het systeemvak of via de sneltoets — niet alleen wanneer GameHub start.",
+  "si.startup_on_reopen": "Opening bij heropenen"
 }

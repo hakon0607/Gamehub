@@ -1695,3 +1695,83 @@ pub async fn default_wallpaper(
     })
     .await
 }
+
+// -------------------------------------------------------------------- startup
+
+/// What the window should do the moment it first appears: play the logo
+/// animation, the chime, both, or neither.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct StartupGreeting {
+    pub animation: bool,
+    pub sound: bool,
+}
+
+/// Decides the greeting once per process. A page reload asks again and gets
+/// nothing, and a start straight into the tray (`--tray`) gets nothing —
+/// there is no window on screen to greet anyone with.
+pub fn decide_greeting(settings: &Settings, first_ask: bool, started_in_tray: bool) -> StartupGreeting {
+    if !first_ask || started_in_tray {
+        return StartupGreeting { animation: false, sound: false };
+    }
+    StartupGreeting { animation: settings.startup_animation, sound: settings.startup_sound }
+}
+
+/// Brings the main window to the front — from the tray menu, the global
+/// shortcut, or a second launch — and, when it was hidden until now and the
+/// person asked for it, plays the opening again.
+pub fn open_main(app: &AppHandle) {
+    let Some(window) = app.get_webview_window("main") else { return };
+    // Hidden means closed to the tray. Minimised to the taskbar is not
+    // "closed" to anyone, so restoring from there never replays the opening.
+    let was_hidden = !window.is_visible().unwrap_or(true);
+    let _ = window.show();
+    let _ = window.unminimize();
+    let _ = window.set_focus();
+    let state = app.state::<Arc<AppState>>().inner().clone();
+    let settings = state.settings();
+    if was_hidden && settings.startup_on_reopen {
+        let greeting = decide_greeting(&settings, true, false);
+        if greeting.sound {
+            crate::overlay::play_startup_sound();
+        }
+        if greeting.animation {
+            let _ = app.emit("opening", greeting);
+        }
+    }
+}
+
+#[tauri::command]
+pub fn startup_greeting(state: State<'_, Arc<AppState>>) -> StartupGreeting {
+    use std::sync::atomic::{AtomicBool, Ordering};
+    static ASKED: AtomicBool = AtomicBool::new(false);
+    let first_ask = !ASKED.swap(true, Ordering::SeqCst);
+    let started_in_tray = std::env::args().any(|a| a == "--tray");
+    let greeting = decide_greeting(&state.settings(), first_ask, started_in_tray);
+    if greeting.sound {
+        crate::overlay::play_startup_sound();
+    }
+    greeting
+}
+
+#[cfg(test)]
+mod startup_tests {
+    use super::*;
+
+    #[test]
+    fn the_greeting_follows_the_settings_on_a_normal_start() {
+        let settings = Settings::default();
+        assert_eq!(decide_greeting(&settings, true, false), StartupGreeting { animation: true, sound: true });
+        let quiet = Settings { startup_sound: false, ..Settings::default() };
+        assert_eq!(decide_greeting(&quiet, true, false), StartupGreeting { animation: true, sound: false });
+        let plain = Settings { startup_animation: false, ..Settings::default() };
+        assert_eq!(decide_greeting(&plain, true, false), StartupGreeting { animation: false, sound: true });
+    }
+
+    #[test]
+    fn a_tray_start_or_a_reload_gets_no_greeting() {
+        let settings = Settings::default();
+        assert_eq!(decide_greeting(&settings, true, true), StartupGreeting { animation: false, sound: false });
+        assert_eq!(decide_greeting(&settings, false, false), StartupGreeting { animation: false, sound: false });
+    }
+}

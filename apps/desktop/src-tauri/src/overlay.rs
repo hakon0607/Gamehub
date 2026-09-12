@@ -144,9 +144,20 @@ pub fn kind_of(title_code: &str) -> &'static str {
 
 /// A short two-note "pling", played through Windows' own PlaySound so it
 /// works whether or not the popup window is allowed to autoplay audio.
-#[cfg(windows)]
 pub fn play_sound() {
     static PLING: &[u8] = include_bytes!("../assets/pling.wav");
+    play_wav(PLING);
+}
+
+/// The soft rising chime that goes with the logo animation when GameHub
+/// opens. Same route as the pling, so it needs no audio permission.
+pub fn play_startup_sound() {
+    static CHIME: &[u8] = include_bytes!("../assets/startup.wav");
+    play_wav(CHIME);
+}
+
+#[cfg(windows)]
+fn play_wav(wav: &'static [u8]) {
     const SND_ASYNC: u32 = 0x0001;
     const SND_NODEFAULT: u32 = 0x0002;
     const SND_MEMORY: u32 = 0x0004;
@@ -154,15 +165,15 @@ pub fn play_sound() {
     extern "system" {
         fn PlaySoundW(sound: *const u8, module: isize, flags: u32) -> i32;
     }
-    // SAFETY: PLING is a static, complete RIFF/WAVE buffer that outlives the
-    // asynchronous playback, which is the one thing SND_MEMORY requires.
+    // SAFETY: the buffer is a static, complete RIFF/WAVE file that outlives
+    // the asynchronous playback, which is the one thing SND_MEMORY requires.
     unsafe {
-        PlaySoundW(PLING.as_ptr(), 0, SND_ASYNC | SND_NODEFAULT | SND_MEMORY);
+        PlaySoundW(wav.as_ptr(), 0, SND_ASYNC | SND_NODEFAULT | SND_MEMORY);
     }
 }
 
 #[cfg(not(windows))]
-pub fn play_sound() {}
+fn play_wav(_wav: &'static [u8]) {}
 
 #[cfg(test)]
 mod tests {
@@ -194,10 +205,14 @@ mod tests {
 
     #[test]
     fn the_sound_is_a_complete_wave_file() {
-        let pling: &[u8] = include_bytes!("../assets/pling.wav");
-        assert_eq!(&pling[0..4], b"RIFF");
-        assert_eq!(&pling[8..12], b"WAVE");
-        let declared = u32::from_le_bytes([pling[4], pling[5], pling[6], pling[7]]) as usize;
-        assert_eq!(declared + 8, pling.len(), "the RIFF header covers the whole file");
+        for wav in [
+            include_bytes!("../assets/pling.wav") as &[u8],
+            include_bytes!("../assets/startup.wav") as &[u8],
+        ] {
+            assert_eq!(&wav[0..4], b"RIFF");
+            assert_eq!(&wav[8..12], b"WAVE");
+            let declared = u32::from_le_bytes([wav[4], wav[5], wav[6], wav[7]]) as usize;
+            assert_eq!(declared + 8, wav.len(), "the RIFF header covers the whole file");
+        }
     }
 }

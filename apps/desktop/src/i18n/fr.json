@@ -854,5 +854,16 @@
   "replay.trim_failed": "Le clip n'a pas été rogné",
   "sc.remove": "Retirer",
   "sc.remove_hint": "Aucune touche — l'action n'est accessible que dans l'app. Retour arrière pendant l'écoute fait pareil.",
-  "be.trim_too_short": "Un clip doit durer au moins une seconde."
+  "be.trim_too_short": "Un clip doit durer au moins une seconde.",
+  "settings.g_opening": "À l'ouverture de GameHub",
+  "settings.startup_animation": "Animation d'ouverture",
+  "settings.startup_animation_hint": "Une courte animation du logo dès que la fenêtre apparaît. Ignorée quand GameHub démarre masqué dans la zone de notification.",
+  "settings.startup_sound": "Son d'ouverture",
+  "settings.startup_sound_hint": "Un carillon doux avec l'animation.",
+  "si.startup_animation": "Animation d'ouverture",
+  "si.startup_sound": "Son d'ouverture",
+  "splash.tagline": "Vos jeux. Un seul endroit.",
+  "settings.startup_on_reopen": "Aussi au retour depuis la zone de notification",
+  "settings.startup_on_reopen_hint": "Jouer l'ouverture à chaque fois que la fenêtre revient depuis la zone de notification ou par le raccourci — pas seulement au démarrage de GameHub.",
+  "si.startup_on_reopen": "Ouverture à la réouverture"
 }

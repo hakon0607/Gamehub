@@ -241,6 +241,11 @@ export function SettingsView({
                 </>
               ), 2)}
             </SettingGroup>
+            <SettingGroup title={t('settings.g_opening')}>
+              {row('startup-animation', t('settings.startup_animation'), t('settings.startup_animation_hint'), <Toggle checked={draft.startupAnimation} onChange={(v) => void save({ ...draft, startupAnimation: v })} />)}
+              {row('startup-sound', t('settings.startup_sound'), t('settings.startup_sound_hint'), <Toggle checked={draft.startupSound} onChange={(v) => void save({ ...draft, startupSound: v })} />, 1)}
+              {row('startup-on-reopen', t('settings.startup_on_reopen'), t('settings.startup_on_reopen_hint'), <Toggle checked={draft.startupOnReopen} onChange={(v) => void save({ ...draft, startupOnReopen: v })} />, 2)}
+            </SettingGroup>
             <SettingGroup title={t('wp.title')}>
               <div style={{ padding: 16 }} data-setting="wallpaper-desktop" className={highlight?.startsWith('wallpaper') ? 'highlight' : ''}>
                 <Wallpapers onToast={onToast} />

@@ -854,5 +854,16 @@
   "replay.trim_failed": "The clip was not trimmed",
   "sc.remove": "Remove",
   "sc.remove_hint": "No key at all — the action is only reachable from inside the app. Backspace while listening does the same.",
-  "be.trim_too_short": "A clip must be at least one second long."
+  "be.trim_too_short": "A clip must be at least one second long.",
+  "settings.g_opening": "When GameHub opens",
+  "settings.startup_animation": "Opening animation",
+  "settings.startup_animation_hint": "A short logo animation the moment the window appears. Skipped when GameHub starts hidden in the tray.",
+  "settings.startup_sound": "Opening sound",
+  "settings.startup_sound_hint": "A soft chime with the animation.",
+  "si.startup_animation": "Opening animation",
+  "si.startup_sound": "Opening sound",
+  "splash.tagline": "Your games. One place.",
+  "settings.startup_on_reopen": "Also when brought back from the tray",
+  "settings.startup_on_reopen_hint": "Play the opening every time the window comes back from the tray or the shortcut too — not only when GameHub starts.",
+  "si.startup_on_reopen": "Opening when reopened"
 }

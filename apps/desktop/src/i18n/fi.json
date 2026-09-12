@@ -854,5 +854,16 @@
   "replay.trim_failed": "Klippiä ei leikattu",
   "sc.remove": "Poista",
   "sc.remove_hint": "Ei näppäintä lainkaan — toiminto on käytettävissä vain sovelluksen sisällä. Askelpalautin kuuntelun aikana tekee saman.",
-  "be.trim_too_short": "Klipin on oltava vähintään sekunnin pituinen."
+  "be.trim_too_short": "Klipin on oltava vähintään sekunnin pituinen.",
+  "settings.g_opening": "Kun GameHub avautuu",
+  "settings.startup_animation": "Avausanimaatio",
+  "settings.startup_animation_hint": "Lyhyt logoanimaatio heti kun ikkuna ilmestyy. Ohitetaan kun GameHub käynnistyy piilotettuna ilmoitusalueelle.",
+  "settings.startup_sound": "Avausääni",
+  "settings.startup_sound_hint": "Pehmeä sointu animaation kanssa.",
+  "si.startup_animation": "Avausanimaatio",
+  "si.startup_sound": "Avausääni",
+  "splash.tagline": "Pelisi. Yhdessä paikassa.",
+  "settings.startup_on_reopen": "Myös kun ikkuna tuodaan esiin ilmoitusalueelta",
+  "settings.startup_on_reopen_hint": "Toista avaus joka kerta, kun ikkuna tuodaan esiin ilmoitusalueelta tai pikanäppäimellä — ei vain GameHubin käynnistyessä.",
+  "si.startup_on_reopen": "Avaus uudelleen avattaessa"
 }
