@@ -11,6 +11,9 @@ pub const LABEL: &str = "quicktools";
 pub fn toggle(app: &tauri::AppHandle) {
     if let Some(window) = app.get_webview_window(LABEL) {
         let visible = window.is_visible().unwrap_or(false);
+        if !visible {
+            crate::telemetry::hit("quicktools");
+        }
         if visible {
             let _ = window.hide();
         } else {

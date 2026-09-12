@@ -865,5 +865,8 @@
   "splash.tagline": "Dine spil. Ét sted.",
   "settings.startup_on_reopen": "Også når den hentes frem fra proceslinjen",
   "settings.startup_on_reopen_hint": "Afspil åbningen hver gang vinduet hentes frem fra proceslinjen eller med genvejen — ikke kun når GameHub starter.",
-  "si.startup_on_reopen": "Åbning ved genåbning"
+  "si.startup_on_reopen": "Åbning ved genåbning",
+  "settings.g_stats": "Anonym brugsstatistik",
+  "settings.stats_note": "For at udvikleren kan se hvor mange der bruger GameHub, sender appen en lille anonym besked hvert femte minut mens den kører: et tilfældigt install-ID, version, sprog, om vinduet er åbent eller i proceslinjen, spillet der spilles, hvor mange spil der er installeret og fra hvilke launchers, Windows-version, og hvor mange gange hver funktion er brugt. Intet navn, ingen konto, ingen filstier. Din IP-adresse gemmes ikke — kun landet.",
+  "si.usage_stats": "Brugsstatistik"
 }

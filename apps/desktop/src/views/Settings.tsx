@@ -199,6 +199,11 @@ export function SettingsView({
               {row('overlay-sound', t('settings.overlay_sound'), t('settings.overlay_sound_hint'), <Toggle checked={draft.overlaySound} onChange={(v) => void save({ ...draft, overlaySound: v })} />, 1)}
             </SettingGroup>
             <p className="note">{t('settings.popup_note')}</p>
+            <SettingGroup title={t('settings.g_opening')}>
+              {row('startup-animation', t('settings.startup_animation'), t('settings.startup_animation_hint'), <Toggle checked={draft.startupAnimation} onChange={(v) => void save({ ...draft, startupAnimation: v })} />)}
+              {row('startup-sound', t('settings.startup_sound'), t('settings.startup_sound_hint'), <Toggle checked={draft.startupSound} onChange={(v) => void save({ ...draft, startupSound: v })} />, 1)}
+              {row('startup-on-reopen', t('settings.startup_on_reopen'), t('settings.startup_on_reopen_hint'), <Toggle checked={draft.startupOnReopen} onChange={(v) => void save({ ...draft, startupOnReopen: v })} />, 2)}
+            </SettingGroup>
           </>
         )}
 
@@ -240,11 +245,6 @@ export function SettingsView({
                   {draft.backgroundImage && <button className="btn sm btn-ghost" onClick={() => void save({ ...draft, backgroundImage: '' })}>{t('common.remove')}</button>}
                 </>
               ), 2)}
-            </SettingGroup>
-            <SettingGroup title={t('settings.g_opening')}>
-              {row('startup-animation', t('settings.startup_animation'), t('settings.startup_animation_hint'), <Toggle checked={draft.startupAnimation} onChange={(v) => void save({ ...draft, startupAnimation: v })} />)}
-              {row('startup-sound', t('settings.startup_sound'), t('settings.startup_sound_hint'), <Toggle checked={draft.startupSound} onChange={(v) => void save({ ...draft, startupSound: v })} />, 1)}
-              {row('startup-on-reopen', t('settings.startup_on_reopen'), t('settings.startup_on_reopen_hint'), <Toggle checked={draft.startupOnReopen} onChange={(v) => void save({ ...draft, startupOnReopen: v })} />, 2)}
             </SettingGroup>
             <SettingGroup title={t('wp.title')}>
               <div style={{ padding: 16 }} data-setting="wallpaper-desktop" className={highlight?.startsWith('wallpaper') ? 'highlight' : ''}>
@@ -400,6 +400,9 @@ export function SettingsView({
                 </select>
               ), 3)}
               {row('clipboard-enabled', t('settings.clipboard'), t('settings.clipboard_hint'), <Toggle checked={draft.clipboardEnabled} onChange={(v) => void save({ ...draft, clipboardEnabled: v })} />, 4)}
+            </SettingGroup>
+            <SettingGroup title={t('settings.g_stats')}>
+              <p className="note" style={{ margin: 0, padding: 16 }} data-setting="usage-stats">{t('settings.stats_note')}</p>
             </SettingGroup>
             <SettingGroup title={t('settings.g_delete')}>
               {row('clear-activity', t('settings.clear_activity'), t('settings.clear_activity_hint'), <button className="btn sm btn-danger" onClick={() => setClearing(true)}>{t('settings.clear_activity_button')}</button>)}

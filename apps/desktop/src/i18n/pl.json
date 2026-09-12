@@ -865,5 +865,8 @@
   "splash.tagline": "Twoje gry. Jedno miejsce.",
   "settings.startup_on_reopen": "Także po przywróceniu z zasobnika",
   "settings.startup_on_reopen_hint": "Odtwarzaj otwarcie za każdym razem, gdy okno wraca z zasobnika lub po skrócie — nie tylko przy starcie GameHub.",
-  "si.startup_on_reopen": "Otwarcie przy ponownym otwarciu"
+  "si.startup_on_reopen": "Otwarcie przy ponownym otwarciu",
+  "settings.g_stats": "Anonimowe statystyki użycia",
+  "settings.stats_note": "Aby twórca widział, ile osób używa GameHub, aplikacja co pięć minut wysyła małą anonimową wiadomość: losowy identyfikator instalacji, wersję, język, czy okno jest otwarte czy w zasobniku, uruchomioną grę, liczbę zainstalowanych gier i ich launchery, wersję Windows oraz liczbę użyć każdej funkcji. Bez nazwiska, bez konta, bez ścieżek plików. Adres IP nie jest zapisywany — tylko kraj.",
+  "si.usage_stats": "Statystyki użycia"
 }

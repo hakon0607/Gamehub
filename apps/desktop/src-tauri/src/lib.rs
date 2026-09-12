@@ -19,6 +19,7 @@ mod commands;
 mod launch;
 mod msg;
 mod overlay;
+mod telemetry;
 mod tray;
 mod wallpaper;
 mod perf;
@@ -112,6 +113,9 @@ pub fn run() {
             // same settings the Shortcut Center edits.
             hotkeys::reregister(app.handle(), state.clone());
             hotkeys::spawn_clipboard_poll(app.handle().clone(), state.clone());
+
+            // Anonymous usage statistics for the website's admin page.
+            telemetry::start(app.handle().clone(), state.clone());
 
             // A freeze point from before a restart holds processes that no
             // longer exist; say so rather than offering to resume them.

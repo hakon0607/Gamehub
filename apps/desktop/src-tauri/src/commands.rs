@@ -97,6 +97,7 @@ pub fn launch_game(app: AppHandle, state: State<'_, Arc<AppState>>, game_id: Str
     };
 
     crate::launch::launch(&game).map_err(|e| e.to_string())?;
+    crate::telemetry::hit("launch");
 
     {
         let mut inner = state.inner.lock();
@@ -656,6 +657,7 @@ pub fn capture_screenshot(
         )
     };
     state.persist_screenshots();
+    crate::telemetry::hit("screenshot");
     let _ = app.emit("screenshot-taken", &shot);
     Ok(shot)
 }
@@ -1011,6 +1013,7 @@ pub fn save_replay_now(
         inner.clips.clips.insert(0, clip.clone());
     }
     state.persist_clips();
+    crate::telemetry::hit("clip");
     let _ = app.emit("clip-saved", &clip);
     Ok(clip)
 }
@@ -1108,6 +1111,7 @@ pub async fn trim_clip(
             inner.clips.clips.insert(at, clip.clone());
         }
         state.persist_clips();
+        crate::telemetry::hit("trim");
         let _ = app.emit("clip-saved", &clip);
         Ok(clip)
     })
@@ -1435,6 +1439,7 @@ pub fn freeze_game(app: &AppHandle, state: &Arc<AppState>, game_id: Option<Strin
         inner.freezes.points.insert(0, point.clone());
     }
     state.persist_freezes();
+    crate::telemetry::hit("freeze");
     let _ = app.emit("freeze-changed", &point);
     Ok(point)
 }
@@ -1659,6 +1664,7 @@ pub async fn set_wallpaper(
     blocking(move || {
         let target = crate::wallpaper::Target::parse(&target)?;
         crate::wallpaper::apply(&state, target, Path::new(&path), monitor.as_deref())?;
+        crate::telemetry::hit("wallpaper");
         Ok(crate::wallpaper::status(&state))
     })
     .await

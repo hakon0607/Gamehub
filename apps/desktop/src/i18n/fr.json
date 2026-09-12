@@ -865,5 +865,8 @@
   "splash.tagline": "Vos jeux. Un seul endroit.",
   "settings.startup_on_reopen": "Aussi au retour depuis la zone de notification",
   "settings.startup_on_reopen_hint": "Jouer l'ouverture à chaque fois que la fenêtre revient depuis la zone de notification ou par le raccourci — pas seulement au démarrage de GameHub.",
-  "si.startup_on_reopen": "Ouverture à la réouverture"
+  "si.startup_on_reopen": "Ouverture à la réouverture",
+  "settings.g_stats": "Statistiques d'utilisation anonymes",
+  "settings.stats_note": "Pour que le développeur voie combien de personnes utilisent GameHub, l'app envoie un petit message anonyme toutes les cinq minutes : un identifiant d'installation aléatoire, la version, la langue, si la fenêtre est ouverte ou dans la zone de notification, le jeu en cours, le nombre de jeux installés et leurs lanceurs, la version de Windows, et le nombre d'utilisations de chaque fonction. Pas de nom, pas de compte, pas de chemins de fichiers. Votre adresse IP n'est pas conservée — seulement le pays.",
+  "si.usage_stats": "Statistiques d'utilisation"
 }

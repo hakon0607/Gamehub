@@ -865,5 +865,8 @@
   "splash.tagline": "Your games. One place.",
   "settings.startup_on_reopen": "Also when brought back from the tray",
   "settings.startup_on_reopen_hint": "Play the opening every time the window comes back from the tray or the shortcut too — not only when GameHub starts.",
-  "si.startup_on_reopen": "Opening when reopened"
+  "si.startup_on_reopen": "Opening when reopened",
+  "settings.g_stats": "Anonymous usage statistics",
+  "settings.stats_note": "So the developer can see how many people use GameHub, the app sends a small anonymous message every five minutes while it runs: a random install id, the version, the language, whether the window is open or in the tray, the game being played, how many games are installed and from which launchers, the Windows version, and how many times each feature was used. No name, no account, no file paths. Your IP address is not stored — only the country.",
+  "si.usage_stats": "Usage statistics"
 }

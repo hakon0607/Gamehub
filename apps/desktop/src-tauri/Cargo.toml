@@ -1,6 +1,6 @@
 [package]
 name = "gamehub"
-version = "1.8.1"
+version = "1.9.0"
 description = "Every PC game you own, in one place."
 edition = "2021"
 rust-version = "1.77"
@@ -40,6 +40,7 @@ sysinfo = "0.32"
 # extra system libraries.
 reqwest = { version = "0.12", default-features = false, features = ["blocking", "rustls-tls"] }
 parking_lot = "0.12"
+uuid = { version = "1", features = ["v4"] }
 # System audio for Replay: WASAPI loopback on Windows (what you hear), piped
 # into ffmpeg as raw PCM. No "Stereo Mix" or virtual cable needed.
 cpal = "0.15"

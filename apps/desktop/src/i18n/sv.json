@@ -865,5 +865,8 @@
   "splash.tagline": "Dina spel. Ett ställe.",
   "settings.startup_on_reopen": "Även när den hämtas fram från aktivitetsfältet",
   "settings.startup_on_reopen_hint": "Spela öppningen varje gång fönstret hämtas fram från aktivitetsfältet eller med genvägen — inte bara när GameHub startar.",
-  "si.startup_on_reopen": "Öppning vid återöppning"
+  "si.startup_on_reopen": "Öppning vid återöppning",
+  "settings.g_stats": "Anonym användningsstatistik",
+  "settings.stats_note": "För att utvecklaren ska se hur många som använder GameHub skickar appen ett litet anonymt meddelande var femte minut medan den körs: ett slumpmässigt install-ID, version, språk, om fönstret är öppet eller i aktivitetsfältet, spelet som spelas, hur många spel som är installerade och från vilka launchers, Windows-version, och hur många gånger varje funktion använts. Inget namn, inget konto, inga filsökvägar. Din IP-adress lagras inte — bara landet.",
+  "si.usage_stats": "Användningsstatistik"
 }

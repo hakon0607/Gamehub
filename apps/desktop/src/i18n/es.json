@@ -865,5 +865,8 @@
   "splash.tagline": "Tus juegos. Un solo lugar.",
   "settings.startup_on_reopen": "También al volver desde la bandeja",
   "settings.startup_on_reopen_hint": "Reproducir la apertura cada vez que la ventana vuelve desde la bandeja o con el atajo — no solo cuando GameHub arranca.",
-  "si.startup_on_reopen": "Apertura al reabrir"
+  "si.startup_on_reopen": "Apertura al reabrir",
+  "settings.g_stats": "Estadísticas de uso anónimas",
+  "settings.stats_note": "Para que el desarrollador vea cuántas personas usan GameHub, la app envía un pequeño mensaje anónimo cada cinco minutos mientras funciona: un ID de instalación aleatorio, versión, idioma, si la ventana está abierta o en la bandeja, el juego en curso, cuántos juegos hay instalados y de qué launchers, la versión de Windows y cuántas veces se usó cada función. Sin nombre, sin cuenta, sin rutas de archivos. Tu dirección IP no se guarda — solo el país.",
+  "si.usage_stats": "Estadísticas de uso"
 }

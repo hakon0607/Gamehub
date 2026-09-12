@@ -865,5 +865,8 @@
   "splash.tagline": "Pelisi. Yhdessä paikassa.",
   "settings.startup_on_reopen": "Myös kun ikkuna tuodaan esiin ilmoitusalueelta",
   "settings.startup_on_reopen_hint": "Toista avaus joka kerta, kun ikkuna tuodaan esiin ilmoitusalueelta tai pikanäppäimellä — ei vain GameHubin käynnistyessä.",
-  "si.startup_on_reopen": "Avaus uudelleen avattaessa"
+  "si.startup_on_reopen": "Avaus uudelleen avattaessa",
+  "settings.g_stats": "Anonyymi käyttötilasto",
+  "settings.stats_note": "Jotta kehittäjä näkee, kuinka moni käyttää GameHubia, sovellus lähettää pienen anonyymin viestin viiden minuutin välein ollessaan käynnissä: satunnaisen asennustunnuksen, version, kielen, onko ikkuna auki vai ilmoitusalueella, pelattavan pelin, asennettujen pelien määrän ja niiden käynnistysohjelmat, Windows-version sekä kunkin toiminnon käyttökerrat. Ei nimeä, ei tiliä, ei tiedostopolkuja. IP-osoitettasi ei tallenneta — vain maa.",
+  "si.usage_stats": "Käyttötilasto"
 }

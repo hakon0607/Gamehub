@@ -865,5 +865,8 @@
   "splash.tagline": "Jouw games. Eén plek.",
   "settings.startup_on_reopen": "Ook bij terughalen uit het systeemvak",
   "settings.startup_on_reopen_hint": "Speel de opening elke keer af wanneer het venster terugkomt uit het systeemvak of via de sneltoets — niet alleen wanneer GameHub start.",
-  "si.startup_on_reopen": "Opening bij heropenen"
+  "si.startup_on_reopen": "Opening bij heropenen",
+  "settings.g_stats": "Anonieme gebruiksstatistieken",
+  "settings.stats_note": "Zodat de ontwikkelaar ziet hoeveel mensen GameHub gebruiken, stuurt de app elke vijf minuten een klein anoniem bericht: een willekeurig installatie-ID, versie, taal, of het venster open is of in het systeemvak, de game die wordt gespeeld, hoeveel games er zijn geïnstalleerd en van welke launchers, de Windows-versie en hoe vaak elke functie is gebruikt. Geen naam, geen account, geen bestandspaden. Je IP-adres wordt niet opgeslagen — alleen het land.",
+  "si.usage_stats": "Gebruiksstatistieken"
 }

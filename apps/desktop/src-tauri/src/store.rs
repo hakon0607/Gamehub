@@ -114,6 +114,8 @@ pub struct Settings {
     /// Also play it when the window comes back after being closed to the
     /// tray — closing with X is "closing GameHub" to most people.
     pub startup_on_reopen: bool,
+    /// Random id made on first run, for the anonymous usage statistics.
+    pub install_id: String,
     /// Desktop background and lock screen picture GameHub set for Windows.
     pub wallpapers: crate::wallpaper::WallpaperSettings,
     pub theme: String,
@@ -155,6 +157,7 @@ impl Default for Settings {
             startup_animation: true,
             startup_sound: true,
             startup_on_reopen: true,
+            install_id: String::new(),
             wallpapers: crate::wallpaper::WallpaperSettings::default(),
             theme: "nattbla".into(),
             onboarded: false,
