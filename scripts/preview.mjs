@@ -20,8 +20,8 @@ const here = dirname(fileURLToPath(import.meta.url));
 const root = join(here, '..');
 const dist = join(root, 'apps/desktop/dist');
 const L = process.env.PREVIEW_LANG === 'en'
-  ? { pick: 'English', library: 'Library', freezes: 'Freeze the game', calendar: 'Calendar', perf: 'Performance', settings: 'Settings', appearance: 'Appearance', search: 'audio', palette: 'freeze', clipboard: 'Clipboard' }
-  : { pick: 'Norsk', library: 'Bibliotek', freezes: 'Frys spillet', calendar: 'Kalender', perf: 'Ytelse', settings: 'Innstillinger', appearance: 'Utseende', search: 'lyd', palette: 'frys', clipboard: 'Utklippstavle' };
+  ? { pick: 'English', library: 'Library', freezes: 'Freeze the game', calendar: 'Calendar', perf: 'Performance', settings: 'Settings', appearance: 'Appearance', shortcuts: 'Shortcuts', privacy: 'Privacy', general: 'General', terms: 'Terms of Service', search: 'audio', palette: 'freeze', clipboard: 'Clipboard' }
+  : { pick: 'Norsk', library: 'Bibliotek', freezes: 'Frys spillet', calendar: 'Kalender', perf: 'Ytelse', settings: 'Innstillinger', appearance: 'Utseende', shortcuts: 'Hurtigtaster', privacy: 'Personvern', general: 'Generelt', terms: 'Brukervilkår', search: 'lyd', palette: 'frys', clipboard: 'Utklippstavle' };
 const out = join(here, 'preview-out');
 mkdirSync(out, { recursive: true });
 
@@ -118,6 +118,18 @@ const answers = {
   get_settings: () => settings,
   // The tour itself starts quietly; the opening is captured on its own below.
   startup_greeting: () => ({ animation: false, sound: false }),
+  legal_status: () => ({
+    version: '1.0', date: '2026-09-12',
+    acceptedVersion: '1.0', acceptedAt: '2026-09-11T20:14:00Z', needsAcceptance: false,
+    statsConsent: true, statsConsentAt: '2026-09-11T20:14:00Z', statsConsentVersion: '1.0',
+    installId: '9f2a41c8b0e64d7fa1c3e5d7b9042a6e',
+    dataFolder: 'C:\\Users\\Håkon\\AppData\\Roaming\\GameHub',
+  }),
+  accept_terms: () => ({ version: '1.0', date: '2026-09-12', acceptedVersion: '1.0', acceptedAt: '2026-09-12T09:00:00Z', needsAcceptance: false, statsConsent: false, statsConsentAt: '', statsConsentVersion: '1.0', installId: '', dataFolder: '' }),
+  set_stats_consent: (a) => ({ version: '1.0', date: '2026-09-12', acceptedVersion: '1.0', acceptedAt: '2026-09-12T09:00:00Z', needsAcceptance: false, statsConsent: Boolean(a.consent), statsConsentAt: '2026-09-12T09:00:00Z', statsConsentVersion: '1.0', installId: a.consent ? '9f2a41c8b0e64d7fa1c3e5d7b9042a6e' : '', dataFolder: '' }),
+  export_my_data: () => 'C:\\Users\\Håkon\\Documents\\GameHub\\gamehub-my-data.json',
+  forget_statistics: () => true,
+  delete_local_data: () => 7,
   save_settings: (a) => Object.assign(settings, a.settings),
   get_activity: () => ({
     streaks: { current: 6, longest: 14, totalDays: 88, totalSeconds: 412_000, currentStreakGames: ['Rainbow Six Siege', 'Forza Horizon 5', 'Fortnite'], bestMonth: ['2026-07', 98_000] },
@@ -247,6 +259,25 @@ await page.evaluate(() => document.querySelector('.wp')?.scrollIntoView());
 await shoot('10b-settings-wallpapers');
 await page.click('.settings-tab:has-text("Replay")');
 await shoot('11-settings-replay');
+// Extra tabs for the tutorial video.
+await page.click(`.settings-tab:has-text("${L.appearance}")`);
+await page.evaluate(() => document.querySelector('.settings-body, .settings-content, main')?.scrollTo(0, 0));
+await shoot('10c-settings-appearance');
+await page.click(`.settings-tab:has-text("${L.shortcuts}")`);
+await shoot('10d-settings-shortcuts');
+await page.click(`.settings-tab:has-text("${L.privacy}")`);
+await shoot('10e-settings-privacy');
+await page.click(`.settings-tab:has-text("${L.general}")`);
+await page.evaluate(() => document.querySelector('[data-setting="startup-animation"]')?.scrollIntoView({ block: 'center' }));
+await shoot('10f-settings-opening');
+// The legal section, last in the list.
+await page.click(`.settings-tab:has-text("${L.terms}")`);
+await shoot('10g-settings-terms');
+await page.click('.legal-doc');
+await page.waitForSelector('.legal-scroll');
+await shoot('10h-legal-document');
+await page.click('.legal-reader-panel .btn-ghost');
+await page.click(`.settings-tab:has-text("${L.general}")`);
 await page.fill('.settings-search input', L.search);
 await shoot('12-settings-search');
 await page.keyboard.press('Escape');
@@ -288,6 +319,26 @@ await popup.evaluate(() => {
 await popup.waitForTimeout(500);
 await popup.screenshot({ path: join(out, '30-popup.png') });
 console.log('  30-popup.png');
+// The first-run legal gate: language answered, terms not yet accepted.
+const gate = await browser.newPage({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 1 });
+await gate.addInitScript(mock);
+await gate.addInitScript(`window.__ANSWERS__ = {}; window.__ANSWERS_SRC__ = ${JSON.stringify(Object.fromEntries(Object.entries(answers).map(([k, v]) => [k, v.toString()])))};`);
+await gate.addInitScript(`
+  const now = ${JSON.stringify(now)};
+  const games = ${JSON.stringify(games)};
+  const settings = ${JSON.stringify({ ...settings, languageChosen: true })};
+  const freezes = ${JSON.stringify(freezes)};
+  const frame = ${frame.toString()};
+  for (const [k, src] of Object.entries(window.__ANSWERS_SRC__)) window.__ANSWERS__[k] = eval('(' + src + ')');
+  window.__ANSWERS__.get_settings = () => settings;
+  window.__ANSWERS__.legal_status = () => ({ version: '1.0', date: '2026-09-12', acceptedVersion: '', acceptedAt: '', needsAcceptance: true, statsConsent: false, statsConsentAt: '', statsConsentVersion: '', installId: '', dataFolder: '' });
+`);
+await gate.goto(`http://localhost:${port}/`);
+await gate.waitForSelector('.legal-consent');
+await gate.waitForTimeout(600);
+await gate.screenshot({ path: join(out, '31-legal-gate.png') });
+console.log('  31-legal-gate.png');
+
 // The opening: the logo animation, frame by frame, on a fresh page that
 // answers "yes" to the greeting. Time is driven by hand, because a full
 // screenshot takes longer than the animation gives it.
