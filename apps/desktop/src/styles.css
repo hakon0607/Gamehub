@@ -2767,3 +2767,237 @@ html.overlay-window #root {
     transform: translateY(-8px) scale(0.98);
   }
 }
+
+/* ----------------------------------------------------------- legal */
+
+/* The documents read like documents: measured line length, quiet rules,
+   and tables that scroll on their own rather than stretching the page. */
+.md {
+  color: var(--ink-dim);
+  font-size: 14px;
+  line-height: 1.65;
+  max-width: 74ch;
+}
+
+.md h2 {
+  color: var(--ink);
+  font-size: 22px;
+  letter-spacing: -0.3px;
+  margin: 0 0 6px;
+}
+
+.md h3 {
+  color: var(--ink);
+  font-size: 16px;
+  margin: 26px 0 6px;
+}
+
+.md h4 {
+  color: var(--ink);
+  font-size: 14px;
+  margin: 18px 0 4px;
+}
+
+.md p {
+  margin: 0 0 12px;
+}
+
+.md ul {
+  margin: 0 0 12px;
+  padding-left: 20px;
+}
+
+.md li {
+  margin-bottom: 6px;
+}
+
+.md strong {
+  color: var(--ink);
+}
+
+.md code {
+  font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace;
+  font-size: 12.5px;
+  background: var(--bg-raised);
+  border-radius: 6px;
+  padding: 1px 6px;
+}
+
+.md hr {
+  border: 0;
+  border-top: 1px solid var(--line);
+  margin: 22px 0;
+}
+
+.md-table {
+  overflow-x: auto;
+  margin: 0 0 16px;
+}
+
+.md-table table {
+  border-collapse: collapse;
+  font-size: 13px;
+  min-width: 100%;
+}
+
+.md-table th,
+.md-table td {
+  text-align: left;
+  padding: 8px 14px 8px 0;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+}
+
+.md-table th {
+  color: var(--ink);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.legal-scroll {
+  max-height: min(62vh, 620px);
+  overflow-y: auto;
+  padding-right: 14px;
+  text-align: left;
+}
+
+.legal-reader {
+  width: min(820px, 100%);
+  text-align: left;
+}
+
+.legal-reader-panel {
+  padding: 4px 2px;
+}
+
+.legal-fallback {
+  margin: 0 0 12px;
+  color: var(--ink-faint);
+}
+
+/* first-run gate */
+.legal-summary {
+  text-align: left;
+  background: var(--bg-card);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 16px 18px;
+  margin-bottom: 16px;
+}
+
+.legal-summary p {
+  margin: 0 0 10px;
+  color: var(--ink-dim);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.legal-summary p:last-child {
+  margin-bottom: 0;
+}
+
+.legal-links {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+}
+
+.legal-consent {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  text-align: left;
+  background: var(--bg-card);
+  border: 1px solid var(--line-strong);
+  border-radius: 14px;
+  padding: 16px 18px;
+  margin-bottom: 20px;
+  cursor: pointer;
+  transition: border-color 0.2s var(--ease), background 0.2s var(--ease);
+}
+
+.legal-consent:hover {
+  border-color: var(--accent);
+  background: var(--bg-hover);
+}
+
+.legal-consent input {
+  width: 20px;
+  height: 20px;
+  margin-top: 2px;
+  accent-color: var(--accent);
+  flex: 0 0 20px;
+}
+
+.legal-consent strong {
+  display: block;
+  color: var(--ink);
+  font-size: 15px;
+  margin-bottom: 3px;
+}
+
+.legal-consent small {
+  display: block;
+  color: var(--ink-dim);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.legal-foot {
+  margin: 12px auto 0;
+  font-size: 12.5px;
+}
+
+/* documents list in Settings */
+.legal-docs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
+  padding: 16px;
+}
+
+.legal-doc {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-align: left;
+  padding: 13px 15px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: var(--bg-raised);
+  color: var(--ink);
+  cursor: pointer;
+  transition: transform 0.16s var(--ease), border-color 0.2s var(--ease), box-shadow 0.2s var(--ease);
+}
+
+.legal-doc:hover {
+  transform: translateY(-1px);
+  border-color: var(--accent);
+  box-shadow: 0 8px 22px var(--glow-soft);
+}
+
+.legal-doc-icon {
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  background: var(--bg-hover);
+  color: var(--accent-2);
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.legal-doc strong {
+  display: block;
+  font-size: 14px;
+}
+
+.legal-doc small {
+  display: block;
+  color: var(--ink-faint);
+  font-size: 12px;
+}

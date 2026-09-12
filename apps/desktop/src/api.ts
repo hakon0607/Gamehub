@@ -33,6 +33,13 @@ export interface Settings {
   language: string;
   /** False until the language screen has been answered once. */
   languageChosen: boolean;
+  legal: {
+    termsVersion: string;
+    termsAcceptedAt: string;
+    statsConsent: boolean;
+    statsConsentVersion: string;
+    statsConsentAt: string;
+  };
   overlayPopup: boolean;
   overlaySound: boolean;
   /** The logo animation and chime when GameHub opens on screen. */
@@ -44,6 +51,21 @@ export interface Settings {
   theme: string;
   onboarded: boolean;
   dismissedUpdateVersion: string | null;
+}
+
+/** What the user has accepted, and what the Terms of Service page shows. */
+export interface LegalStatus {
+  version: string;
+  date: string;
+  acceptedVersion: string;
+  acceptedAt: string;
+  needsAcceptance: boolean;
+  statsConsent: boolean;
+  statsConsentAt: string;
+  statsConsentVersion: string;
+  /** Empty while statistics are off — no identifier exists then. */
+  installId: string;
+  dataFolder: string;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -422,6 +444,17 @@ export const api = {
   wallpaperStatus: () => invoke<WallpaperStatus>('wallpaper_status'),
   /** Asked once when the window first appears; the backend plays the chime itself. */
   startupGreeting: () => invoke<{ animation: boolean; sound: boolean }>('startup_greeting'),
+
+  /* --- terms, consent and the data rights ------------------------------ */
+  legalStatus: () => invoke<LegalStatus>('legal_status'),
+  acceptTerms: () => invoke<LegalStatus>('accept_terms'),
+  setStatsConsent: (consent: boolean) => invoke<LegalStatus>('set_stats_consent', { consent }),
+  /** Asks the server to delete everything under this install id, then forgets it. */
+  forgetStatistics: () => invoke<boolean>('forget_statistics'),
+  /** Writes a JSON file with everything the app holds on this PC; returns its path. */
+  exportMyData: () => invoke<string>('export_my_data'),
+  /** Deletes the local data files. Returns how many were removed. */
+  deleteLocalData: () => invoke<number>('delete_local_data'),
   setWallpaper: (target: WallpaperTarget, path: string, monitor?: string) =>
     invoke<WallpaperStatus>('set_wallpaper', { target, path, monitor: monitor ?? null }),
   forgetWallpaper: (target: WallpaperTarget, monitor?: string) =>

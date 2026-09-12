@@ -12,6 +12,7 @@ import { Confirm, SettingGroup, SettingRow, Slider, Toggle } from '../ui';
 import { formatSeconds } from '../format';
 import { LANGUAGES, t, tr, type Key } from '../i18n';
 import { Wallpapers } from '../components/Wallpapers';
+import { LegalSection } from '../components/LegalSection';
 
 const THEMES: { id: string; key: Key; swatch: string[] }[] = [
   { id: 'nattbla', key: 'settings.theme_nattbla', swatch: ['#05070d', '#0b1120', '#4f8cff'] },
@@ -411,6 +412,8 @@ export function SettingsView({
         )}
 
         {tab === 'data' && <DataSection onToast={onToast} />}
+
+        {tab === 'terms' && <LegalSection onToast={onToast} />}
 
         {tab === 'updates' && (
           <SettingGroup title={t('settings.g_version', { version })}>

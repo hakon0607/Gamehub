@@ -19,6 +19,7 @@ import { Clipboard } from './views/Clipboard';
 import { SettingsView } from './views/Settings';
 import { Onboarding } from './views/Onboarding';
 import { LanguageChooser } from './views/LanguageChooser';
+import { LegalGate } from './views/LegalGate';
 import { UpdateDialog } from './components/UpdateDialog';
 import { Toasts, type Toast } from './components/Toasts';
 import { ShotPreview } from './components/ShotPreview';
@@ -85,6 +86,8 @@ export function App() {
   const [palette, setPalette] = useState(false);
   const [settingsTarget, setSettingsTarget] = useState<{ category: SettingsCategory; id: string | null } | null>(null);
   const [shortcuts, setShortcuts] = useState<ShortcutEntry[]>([]);
+  // Whether the terms on screen have been accepted. Null until asked.
+  const [legal, setLegal] = useState<{ needsAcceptance: boolean; acceptedVersion: string } | null>(null);
   // Bumped whenever the language changes, so the whole tree re-renders in it.
   const [lang, setLang] = useState(currentLanguage());
 
@@ -115,6 +118,7 @@ export function App() {
     refreshFreeze();
     refreshReplay();
     refreshShortcuts();
+    void api.legalStatus().then(setLegal);
     window.addEventListener('shortcuts-changed', refreshShortcuts);
 
     const ticking = window.setInterval(() => {
@@ -369,6 +373,25 @@ export function App() {
       <>
         <div className="aurora"><i /><i /><i /></div>
         <LanguageChooser initial="en" onDone={(code) => void saveSettings({ ...settings, language: code, languageChosen: true })} />
+      </>
+    );
+  }
+
+  // Language first, then the terms. Nothing else runs until both are answered:
+  // the app must not scan, record or send anything before the person has seen
+  // what it does.
+  if (settings && legal?.needsAcceptance) {
+    return (
+      <>
+        <div className="aurora"><i /><i /><i /></div>
+        <LegalGate
+          returning={legal.acceptedVersion !== ''}
+          onDone={async (stats) => {
+            await api.acceptTerms();
+            await api.setStatsConsent(stats);
+            setLegal(await api.legalStatus());
+          }}
+        />
       </>
     );
   }

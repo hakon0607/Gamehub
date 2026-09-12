@@ -22,7 +22,8 @@ export type SettingsCategory =
   | 'data'
   | 'updates'
   | 'artwork'
-  | 'assistant';
+  | 'assistant'
+  | 'terms';
 
 export interface SettingEntry {
   id: string;
@@ -54,6 +55,9 @@ const CATEGORY_LIST: { id: SettingsCategory; icon: string }[] = [
   { id: 'updates', icon: '↑' },
   { id: 'artwork', icon: '▣' },
   { id: 'assistant', icon: '✦' },
+  // Last on purpose: the legal section is a place you go to look something
+  // up or exercise a right, not a setting you pass on the way somewhere else.
+  { id: 'terms', icon: '§' },
 ];
 
 /** The categories, in the current language. Called at render time. */
@@ -104,6 +108,10 @@ const ENTRIES: { id: string; category: SettingsCategory; keywords: string }[] = 
   { id: 'idle-minutes', category: 'privacy', keywords: 'idle afk inactivity pause playtime' },
   { id: 'streak-threshold', category: 'privacy', keywords: 'streak threshold minutes day' },
   { id: 'clipboard-enabled', category: 'privacy', keywords: 'clipboard history copy' },
+  { id: 'stats-consent', category: 'terms', keywords: 'statistics telemetry consent anonymous usage data samtykke statistikk' },
+  { id: 'terms-documents', category: 'terms', keywords: 'terms of service privacy policy licence legal eula vilkår personvern lisens' },
+  { id: 'export-data', category: 'terms', keywords: 'export download my data gdpr portability eksport mine data' },
+  { id: 'delete-data', category: 'terms', keywords: 'delete erase my data gdpr right to be forgotten slett mine data' },
   { id: 'usage-stats', category: 'privacy', keywords: 'statistics telemetry anonymous usage data sent privacy statistikk' },
   { id: 'clear-activity', category: 'privacy', keywords: 'delete clear history activity' },
   { id: 'data-folders', category: 'data', keywords: 'data folder appdata backup' },
