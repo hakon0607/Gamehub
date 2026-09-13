@@ -1,0 +1,180 @@
+name: Release
+
+# Edit a file on GitHub, commit, and a signed release appears. Nothing has to
+# be run locally — no terminal, no signing, no uploading.
+#
+# The version in apps/desktop/src-tauri/tauri.conf.json decides everything:
+# bump it and this publishes v<version>; leave it and the run stops with an
+# explanation instead of releasing the same version twice.
+#
+# Three repository secrets make it work (docs/RELEASING.md):
+#   TAURI_SIGNING_PRIVATE_KEY, TAURI_SIGNING_PRIVATE_KEY_PASSWORD, TAURI_UPDATER_PUBKEY
+on:
+  push:
+    branches: [main]
+    paths:
+      # Only a version change is a release. Any other commit is just CI.
+      - 'apps/desktop/src-tauri/tauri.conf.json'
+  workflow_dispatch:
+    inputs:
+      force:
+        description: 'Replace the existing release for this version'
+        type: boolean
+        default: false
+
+# Two pushes in a row must not race each other into the same tag.
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  guard:
+    name: Check the version
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.decide.outputs.version }}
+      tag: ${{ steps.decide.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Tags are how the guard knows what has already been released.
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Test the guard itself
+        run: node scripts/release-guard.test.mjs
+
+      - name: Decide whether to release
+        id: decide
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tags=$(gh release list --limit 200 --json tagName --jq '.[].tagName' 2>/dev/null || true)
+          tags="$tags $(git tag --list 'v*')"
+          node scripts/release-guard.mjs "$tags" "${{ inputs.force == true && 'force' || '' }}"
+
+  release:
+    name: Build and publish
+    needs: guard
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    env:
+      VERSION: ${{ needs.guard.outputs.version }}
+      TAG: ${{ needs.guard.outputs.tag }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: apps/desktop/src-tauri -> target
+
+      - run: pnpm install --frozen-lockfile
+
+      # ffmpeg is what Replay records with. A failure here must not block a
+      # release: everything else works without it, and the release notes say so.
+      - name: Fetch ffmpeg for Replay
+        id: ffmpeg
+        continue-on-error: true
+        run: pnpm fetch-ffmpeg
+
+      # The updater public key lives in a secret, not in the repository, so no
+      # config file arriving from anywhere can overwrite it. This writes it into
+      # tauri.conf.json for the length of this run only; nothing is committed.
+      - name: Apply the updater public key
+        env:
+          TAURI_UPDATER_PUBKEY: ${{ secrets.TAURI_UPDATER_PUBKEY }}
+        run: node scripts/apply-updater-pubkey.mjs --release
+
+      # Before cargo: `tauri::generate_context!()` checks frontendDist while the
+      # macro expands. build.rs also guards this, so both belts are fastened.
+      - name: Build the front end
+        run: pnpm --filter @gamehub/desktop build
+
+      - name: Test
+        run: |
+          cargo test --manifest-path packages/game-detection/Cargo.toml
+          cargo test --manifest-path packages/launcher-adapters/Cargo.toml
+          cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml --lib
+          node scripts/release-guard.test.mjs
+          node scripts/apply-updater-pubkey.test.mjs
+          node scripts/shortcut-match.test.mjs
+
+      # The signing key never touches the repository — it comes from the secret
+      # and exists only for the length of this step.
+      - name: Build and sign the installer
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        run: pnpm --filter @gamehub/desktop tauri build
+
+      - name: Check the signature was produced
+        shell: pwsh
+        run: |
+          $bundle = "apps/desktop/src-tauri/target/release/bundle/nsis"
+          $sig = Get-ChildItem "$bundle/*-setup.exe.sig" -ErrorAction SilentlyContinue | Select-Object -First 1
+          if (-not $sig) {
+            Write-Host "::error title=No signature produced::The installer was built but not signed. Check that the repository secret TAURI_SIGNING_PRIVATE_KEY is set, and that TAURI_SIGNING_PRIVATE_KEY_PASSWORD matches the password the key was created with."
+            exit 1
+          }
+          Write-Host "Signed: $($sig.Name)"
+
+      - name: Write latest.json
+        run: node scripts/make-latest-json.mjs "GameHub ${{ env.VERSION }}"
+
+      - name: Also produce a stable GameHub-Setup.exe
+        run: node scripts/rename-installer.mjs
+
+      - name: Publish the release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $bundle = "apps/desktop/src-tauri/target/release/bundle/nsis"
+          $installer = Get-ChildItem "$bundle/GameHub_${env:VERSION}_x64-setup.exe" | Select-Object -First 1
+          $signature = Get-ChildItem "$bundle/GameHub_${env:VERSION}_x64-setup.exe.sig" | Select-Object -First 1
+          $latest    = "$bundle/latest.json"
+          $stable    = "$bundle/GameHub-Setup.exe"
+
+          # Built by concatenation rather than a here-string: PowerShell needs
+          # the closing "@ in column zero, which YAML indentation makes
+          # impossible.
+          $lines = @(
+            "Download **GameHub-Setup.exe** below and run it.",
+            "",
+            "Already have GameHub? It will offer this update by itself the next time you open it.",
+            "",
+            "Windows may warn that the publisher is unknown - the installer is not code-signed. Choose *More info* then *Run anyway*."
+          )
+          if ("${{ steps.ffmpeg.outcome }}" -ne "success") {
+            $lines += ""
+            $lines += "> Replay is not included in this build: ffmpeg could not be downloaded when it was made."
+          }
+          $notes = $lines -join "`n"
+
+          # --latest is what makes releases/latest/download/latest.json resolve
+          # here, which is the endpoint the app already points at.
+          if ("${{ inputs.force }}" -eq "true") {
+            gh release delete "${env:TAG}" --yes --cleanup-tag 2>$null
+          }
+
+          gh release create "${env:TAG}" `
+            $installer.FullName `
+            $signature.FullName `
+            $latest `
+            $stable `
+            --title "GameHub ${env:VERSION}" `
+            --notes $notes `
+            --latest
+
+          Write-Host "Published ${env:TAG}"
