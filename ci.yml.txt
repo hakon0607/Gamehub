@@ -1,0 +1,79 @@
+name: CI
+
+# The fast checks. Releases are a separate workflow triggered by the version in
+# tauri.conf.json changing — see release.yml.
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+  pull_request:
+
+jobs:
+  check:
+    name: Typecheck, lint and test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # No `version:` here on purpose. pnpm/action-setup reads the pnpm
+      # version from `packageManager` in package.json, which is the single
+      # source of truth. Setting both is an error the action refuses to guess
+      # its way out of.
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: apps/desktop/src-tauri -> target
+
+      # The detection and adapter crates are pure Rust with no Tauri
+      # dependency, which is exactly why they can be tested on Linux: every
+      # adapter runs against a fixture tree and a fake registry.
+      - name: Test game detection
+        run: cargo test --manifest-path packages/game-detection/Cargo.toml
+      - name: Test launcher adapters
+        run: cargo test --manifest-path packages/launcher-adapters/Cargo.toml
+
+      - run: pnpm install --frozen-lockfile
+      - run: node scripts/release-guard.test.mjs
+      - run: node scripts/apply-updater-pubkey.test.mjs
+      - run: node scripts/shortcut-match.test.mjs
+      - run: node scripts/csp.test.mjs
+      - run: node scripts/contrast.test.mjs
+      - run: pnpm typecheck
+      - run: pnpm --filter @gamehub/desktop build
+
+  windows:
+    name: Build the Windows app
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      # No `version:` here on purpose. pnpm/action-setup reads the pnpm
+      # version from `packageManager` in package.json, which is the single
+      # source of truth. Setting both is an error the action refuses to guess
+      # its way out of.
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: apps/desktop/src-tauri -> target
+      - run: pnpm install --frozen-lockfile
+      # Pull requests have no secrets, so a throwaway updater key lets the app
+      # compile. The build is never published; the release workflow uses the
+      # real key.
+      - run: node scripts/apply-updater-pubkey.mjs --check
+      # Before cargo: generate_context!() validates frontendDist at compile
+      # time, so apps/desktop/dist has to exist first.
+      - run: pnpm --filter @gamehub/desktop build
+      # The whole app, including the Windows-only registry and shell code that
+      # cannot be compiled anywhere else.
+      - run: cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml
+      - run: pnpm --filter @gamehub/desktop tauri build --no-bundle
