@@ -1,0 +1,17 @@
+[package]
+name = "gamehub-detect"
+version = "0.1.0"
+edition = "2021"
+description = "Environment abstraction, Valve KeyValues parsing and the game library model for GameHub."
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+thiserror = "2"
+time = { version = "0.3", features = ["formatting", "parsing", "serde", "macros", "local-offset"] }
+
+[target.'cfg(windows)'.dependencies]
+winreg = "0.52"
+
+[dev-dependencies]
+tempfile = "3"
